@@ -133,18 +133,68 @@ PATTERNS = {
 # 会派が増えたり名前が変わったら、ここに足すだけでよい。
 # ※ 上から順に照合するので、長い名前・具体的な名前を先に書くこと。
 FACTIONS = [
+    # 「自由民主党「誉」」は「自由民主党」を含むので、必ず先に照合する
+    ("自由民主党「誉」",            ["自由民主党「誉」", "自民誉"]),
     ("自由民主党文京区議会",        ["自由民主党文京区議会", "自民党文京区議会"]),
     ("日本共産党文京区議会議員団",  ["日本共産党文京区議会議員団", "日本共産党文京区議会", "日本共産党"]),
     ("公明党文京区議団",            ["公明党文京区議団", "公明党"]),
-    ("日本維新の会文京区議団",      ["日本維新の会文京区議団", "文京区議会日本維新の会", "日本維新の会"]),
+    # 維新は2025年6月に会派名が変わっており、別の会派として扱う。
+    # 「日本維新の会」だけの言い方はどちらか判別できないので、あえて登録しない。
+    ("文京区議会日本維新の会",      ["文京区議会日本維新の会", "文京維新"]),
+    ("日本維新の会文京区議団",      ["日本維新の会文京区議団"]),
     ("文京区議会都民ファーストの会", ["文京区議会都民ファーストの会", "都民ファーストの会"]),
     ("政策チームAGORA",             ["政策チーム AGORA", "政策チームAGORA", "AGORA"]),
     ("ぶんきょう子育て.ネット",     ["ぶんきょう子育て.ネット", "ぶんきょう子育てネット"]),
+    ("希望のまち文京をつくる会",    ["希望のまち文京をつくる会"]),
     ("文京永久の会",                ["文京永久の会"]),
     ("市民フォーラム",              ["市民フォーラム"]),
     ("区民が主役の会",              ["区民が主役の会"]),
     ("文京根っこの会",              ["文京根っこの会"]),
 ]
+
+# 会派の変遷（区議会への届出PDFで確認した事実。2026-09-14 反映）。
+#   (議員名, この日から, この日まで, 会派名)
+#   日付は "YYYY-MM-DD"。"" は「制限なし」の意味。両端とも含む。
+# 名乗りより届出を優先する。名乗りは略称や通称が使われることがあるため。
+FACTION_OVERRIDES = [
+    ("依田翼",       "",           "2025-08-31", "文京区議会都民ファーストの会"),
+    ("依田翼",       "2025-09-01", "",           "区民が主役の会"),
+    # 「希望のまち文京をつくる会」は2025/5/1結成・2025/8/31解散。
+    # その期間だけに限定する。それ以前は本人の名乗り（日本共産党）をそのまま使う。
+    ("小林れい子",   "2025-05-01", "2025-08-31", "希望のまち文京をつくる会"),
+    ("小林れい子",   "2025-09-01", "",           "区民が主役の会"),
+    ("海津敦子",     "2025-05-01", "",           "区民が主役の会"),
+    ("高山かずひろ", "",           "2025-05-31", "日本維新の会文京区議団"),
+    ("高山かずひろ", "2025-06-01", "",           "文京区議会日本維新の会"),
+    ("宮崎こうき",   "",           "2025-05-31", "日本維新の会文京区議団"),
+    ("宮崎こうき",   "2025-06-01", "",           "文京区議会日本維新の会"),
+    ("宮野ゆみこ",   "2025-05-01", "",           "市民フォーラム"),
+    ("ほかり吉紀",   "",           "2025-04-30", "文京根っこの会"),
+    ("ほかり吉紀",   "2025-05-01", "",           "市民フォーラム"),
+    ("豪一",         "",           "2026-01-04", "自由民主党文京区議会"),
+    ("豪一",         "2026-01-05", "",           "自由民主党「誉」"),
+    # 2026/1/5の自民分裂で「自由民主党「誉」」へ移ったのは豪一議員のみ。
+    # 下の4名は分裂後も「自由民主党文京区議会」なので、期間の指定はしない（確認済み）。
+    ("山田ひろこ",   "",           "",           "自由民主党文京区議会"),
+    ("浅川のぼる",   "",           "",           "自由民主党文京区議会"),
+    ("のぐちけんたろう", "",       "",           "自由民主党文京区議会"),
+    ("市村やすとし", "",           "",           "自由民主党文京区議会"),
+]
+
+
+def official_party(name: str, date: str) -> str:
+    """届出の表から、その議員のその日の会派名を引く。無ければ空。"""
+    if not date:
+        return ""
+    for who, start, end, faction in FACTION_OVERRIDES:
+        if who != name:
+            continue
+        if start and date < start:
+            continue
+        if end and date > end:
+            continue
+        return faction
+    return ""
 
 # 政策テーマのタグ。見出しや本文にこの語が出たらタグを付ける。
 TAG_RULES = {
@@ -260,14 +310,26 @@ def fill_missing_parties(all_q):
     last_known = {}
     for q in sorted(all_q, key=lambda x: (x["meeting_date"], x["question_order"])):
         name = q["questioner_name"]
-        if q["questioner_party"]:
-            q["party_source"] = "stated"       # 本人が名乗った
-            last_known[name] = q["questioner_party"]
+        stated = q["questioner_party"]              # 名乗りから読み取った会派
+        official = official_party(name, q["meeting_date"])  # 届出の表から引いた会派
+
+        if official:
+            q["questioner_party"] = official
+            if stated and stated != official:
+                # 届出と名乗りが食い違う。届出を採用しつつ、名乗りも残して印を付ける。
+                q["questioner_party_stated"] = stated
+                q["party_source"] = "official_conflict"
+            else:
+                q["party_source"] = "official"     # 届出で確定
+            last_known[name] = official
+        elif stated:
+            q["party_source"] = "stated"           # 本人が名乗った
+            last_known[name] = stated
         elif name in last_known:
             q["questioner_party"] = last_known[name]
-            q["party_source"] = "carried"      # 前回の発言から引き継ぎ（要確認）
+            q["party_source"] = "carried"          # 前回の発言から引き継ぎ（要確認）
         else:
-            q["party_source"] = "unknown"      # 分からない（要入力）
+            q["party_source"] = "unknown"          # 分からない（要入力）
     return all_q
 
 
@@ -489,10 +551,10 @@ def main():
         all_q.extend(qs)
 
     fill_missing_parties(all_q)
-    n_stated = sum(1 for q in all_q if q.get("party_source") == "stated")
-    n_carried = sum(1 for q in all_q if q.get("party_source") == "carried")
-    n_unknown = sum(1 for q in all_q if q.get("party_source") == "unknown")
-    print(f"\n会派: 本人が名乗った {n_stated} 件 / 前回から引き継ぎ {n_carried} 件 / 不明 {n_unknown} 件")
+    c = {k: sum(1 for q in all_q if q.get("party_source") == k)
+         for k in ("official", "official_conflict", "stated", "carried", "unknown")}
+    print(f"\n会派: 届出で確定 {c['official']} 件 / 届出と名乗りが不一致 {c['official_conflict']} 件"
+          f" / 名乗りのみ {c['stated']} 件 / 引き継ぎ {c['carried']} 件 / 不明 {c['unknown']} 件")
 
     out_path = Path(args.out)
     # 出力先のフォルダが無ければ作る（既定の data/ など）
