@@ -292,7 +292,12 @@ def diagnose(path: Path, verbose: bool = True):
     speaker_kind = None  # "q"=質問 / "f"=再質問 / "a"=答弁
 
     for i, line in scoped:
-        if PATTERNS["skip"].match(line) or PATTERNS["chair"].match(line):
+        if PATTERNS["skip"].match(line):
+            continue
+        if PATTERNS["chair"].match(line):
+            # 議長の発言に入った。以降、次に「○…」で始まる発言者が出てくるまでは
+            # 議長の話の続きなので、質問や答弁には混ぜない。
+            speaker_kind = "chair"
             continue
         label = None
         mq = PATTERNS["questioner"].match(line)
@@ -348,11 +353,17 @@ def parse(path: Path, source_type: str, source_url: str = ""):
 
     questions = []
     current = None
-    speaker_kind = None  # "q"=質問 / "f"=再質問 / "a"=答弁
+    speaker_kind = None  # "q"=質問 / "f"=再質問 / "a"=答弁 / "chair"=議長（捨てる）
     order = 0
 
     for _, line in iter_general_question_lines(paras):
-        if PATTERNS["skip"].match(line) or PATTERNS["chair"].match(line):
+        if PATTERNS["skip"].match(line):
+            continue
+        if PATTERNS["chair"].match(line):
+            # 議長の発言に入った。議長の話は複数段落に分かれることがあり、
+            # 2段落目以降には「○議長(…)」が付かない。次の発言者が出てくるまでは
+            # 議長の話の続きとみなして、質問や答弁に混ぜない。
+            speaker_kind = "chair"
             continue
 
         mq = PATTERNS["questioner"].match(line)
