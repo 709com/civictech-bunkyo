@@ -18,3 +18,22 @@ docs/adachi/20260908_福岡市版seedバグ報告.md
 
 # local claude permissions
 .claude/settings.local.json
+
+# 会議録（個人情報・著作権配慮のためGitHubには上げない）
+honkaigi-kaigiroku/
+*.docx
+
+# 会議録から作った中間データ。本文がそのまま入っているのでGitHubには上げない。
+data/
+out.json
+
+# バックアップファイル全般（作業途中の控え。公開する必要がない）
+*.bak
+
+# 設計書。政治的な判断の経緯が書かれており、このリポジトリは公開状態のため
+# コミットすると誰でも読める。手元には残すが、GitHubには上げない。
+bunkyo-gikai-navi-design.md
+
+# Pythonが自動で作る作業用ファイル
+__pycache__/
+*.pyc
