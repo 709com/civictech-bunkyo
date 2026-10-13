@@ -46,6 +46,7 @@ Wordの会議録ファイルを読み込んで、「誰が」「何を質問し�
 import argparse
 import json
 import re
+import subprocess
 import sys
 import unicodedata
 from pathlib import Path
@@ -227,6 +228,86 @@ def official_party(name: str, date: str) -> str:
             continue
         return faction
     return ""
+
+def compare_faction_history(script_rows, db_rows):
+    """FACTION_OVERRIDES と、データベースの会派履歴表の中身を比べる。
+
+    どちらも (議員名, 開始日, 終了日, 会派名) の並び。日付の "" は「制限なし」。
+    返すもの: (このファイルにだけある行, データベースにだけある行)。どちらも空なら一致。
+    """
+    script_set = {tuple(r) for r in script_rows}
+    db_set = {tuple(r) for r in db_rows}
+    return sorted(script_set - db_set), sorted(db_set - script_set)
+
+
+def read_faction_history_from_db():
+    """ローカルのデータベースから、会派履歴表を読む（読むだけ。何も書き換えない）。
+
+    読めなかった場合（Docker やデータベースが動いていない等）は None を返す。
+    """
+    try:
+        config = (Path(__file__).resolve().parent / "supabase" / "config.toml").read_text(encoding="utf-8")
+        m = re.search(r'^project_id\s*=\s*"([^"]+)"', config, re.M)
+        if not m:
+            return None
+        sql = (
+            "select m.name, coalesce(h.start_date::text, ''), coalesce(h.end_date::text, ''), f.name"
+            " from public.member_faction_history h"
+            " join public.members m on m.id = h.member_id"
+            " join public.factions f on f.id = h.faction_id"
+        )
+        result = subprocess.run(
+            ["docker", "exec", "-e", "PGCLIENTENCODING=UTF8", f"supabase_db_{m.group(1)}",
+             "psql", "-U", "postgres", "-d", "postgres", "-X", "-q", "-At", "-F", "\t", "-c", sql],
+            capture_output=True, timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    rows = []
+    for line in result.stdout.decode("utf-8", errors="replace").splitlines():
+        parts = line.split("\t")
+        if len(parts) == 4:
+            rows.append(tuple(parts))
+    return rows
+
+
+def check_faction_history():
+    """FACTION_OVERRIDES とデータベースの会派履歴表を照合し、食い違いがあれば警告を出す。
+
+    会派の正はデータベースの会派履歴表（member_faction_history）。
+    このファイルの FACTION_OVERRIDES は、JSONを作る段階での確認用の写し。
+    片方だけ直すと食い違うので、毎回ここで見比べる。データはどちらも書き換えない。
+    """
+    db_rows = read_faction_history_from_db()
+    if db_rows is None:
+        print("\n会派の照合: データベースを読めなかったため、照合していません"
+              "（Supabase が起動しているか確認してください）。")
+        return
+    only_script, only_db = compare_faction_history(FACTION_OVERRIDES, db_rows)
+    if not only_script and not only_db:
+        print(f"\n会派の照合: FACTION_OVERRIDES（{len(FACTION_OVERRIDES)} 行）と"
+              f"データベースの会派履歴表（{len(db_rows)} 行）は一致しています。")
+        return
+
+    def show(row):
+        name, start, end, faction = row
+        return f"{name}  {start or '（制限なし）'} 〜 {end or '（制限なし）'}  {faction}"
+
+    print("\n" + "!" * 60)
+    print("【警告】FACTION_OVERRIDES とデータベースの会派履歴表が食い違っています。")
+    print("        正はデータベースです。どちらを直すべきか確認してください（自動では直しません）。")
+    if only_script:
+        print(f"  ▼ このファイルにだけある行（{len(only_script)} 行）")
+        for row in only_script:
+            print("      " + show(row))
+    if only_db:
+        print(f"  ▼ データベースにだけある行（{len(only_db)} 行）")
+        for row in only_db:
+            print("      " + show(row))
+    print("!" * 60)
+
 
 # 政策テーマのタグ。見出しや本文にこの語が出たらタグを付ける。
 TAG_RULES = {
@@ -757,6 +838,9 @@ def main():
     print("※ このファイルには会議録の本文が入っています。GitHubには上げないでください")
     print("   （data/ は .gitignore で除外済みです）。")
     print("中身を一度目で見てから、データベースへの投入に進んでください。")
+
+    # 会派の表（このファイルの写しと、データベースの正）が食い違っていないか確かめる
+    check_faction_history()
 
 
 if __name__ == "__main__":
