@@ -2403,6 +2403,7 @@ export type Database = {
         }[]
       }
       find_member_id: { Args: { p_notation: string }; Returns: string }
+      general_question_search_options: { Args: never; Returns: Json }
       get_admin_users: {
         Args: never
         Returns: {
@@ -2439,6 +2440,38 @@ export type Database = {
       refresh_council_member_faction: {
         Args: { p_member_id: string }
         Returns: undefined
+      }
+      search_general_question_passages: {
+        Args: {
+          p_answerer_role?: string
+          p_council_session_id?: string
+          p_faction_name?: string
+          p_limit?: number
+          p_member_id?: string
+          p_terms?: string[]
+        }
+        Returns: {
+          chapter_title: string
+          faction_source: string
+          meeting_date: string
+          passage_kind: string
+          passage_length: number
+          questioner_faction: string
+          questioner_name: string
+          section_id: string
+          session_name: string
+          snippet: string
+          snippet_has_after: boolean
+          snippet_has_before: boolean
+          speaker_kind: string
+          speaker_name: string
+          speaker_role: string
+          speech_id: string
+          speech_order: number
+          topic_title: string
+          total_passages: number
+          total_sections: number
+        }[]
       }
       set_active_council_session: {
         Args: { target_session_id: string }

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navigationLinks = [
+  { href: "/general-question-search", label: "一般質問の検索" },
   { href: "/bills", label: "議案管理" },
   { href: "/council-sessions", label: "定例会管理" },
   { href: "/tags", label: "タグ管理" },
