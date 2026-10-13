@@ -126,6 +126,38 @@ PATTERNS = {
         r"^\s*$|^[―—─\-]+$|^[〔［\[].*[〕］\]]$|^午[前後][^ ]{0,12}(?:開議|休憩|散会|再開)$"
     ),
 
+    # --- 答弁の中の区切り（章と論点） -----------------------------------
+    # 2026-10-13 に実ファイル（答弁187件）を調べて決めたルール。
+    #
+    # あいさつ。保存しない。
+    #   「沢田議員の御質問にお答えします。」「依田議員の再質問にお答えいたします。」
+    "ans_greeting": re.compile(
+        r"^.{1,20}議員の(?:御|ご)?(?:再)?質問にお答え(?:いた)?します。$"
+    ),
+    # 章の宣言（大見出し）。
+    #   「次に、災害対策に関する御質問にお答えします。」
+    #   「教育に関する御質問にお答えします。」
+    #   「初めに、給食に関する幾つかの御質問にお答えします。」
+    "ans_chapter": re.compile(
+        r"^(?:(?:最初に|初めに|はじめに|まず|次に|続いて|続きまして|最後に|終わりに|おわりに)[、,]?\s*)?"
+        r"(?P<title>.{1,70}?)"
+        r"(?:御|ご)?質問にお答え(?:いた)?します。$"
+    ),
+    # 論点の始まり。
+    #   「まず、住民による合意形成についてのお尋ねですが、……」
+    #   「次に、弾力運用の中止を国に求めるべきとのお尋ねですが、……」
+    "ans_topic": re.compile(
+        r"^(?:最初に|初めに|はじめに|まず|次に|続いて|続きまして|最後に|終わりに|おわりに|また|さらに|なお)"
+        r"[、,]?\s*"
+        r"(?P<title>.{1,120}?)"
+        r"お尋ねですが、"
+    ),
+    # 次の答弁者への引き継ぎ。どの論点にも含めない。
+    #   「なお、教育に関する御質問には、教育長より御答弁申し上げます。」
+    "ans_handoff": re.compile(
+        r"^(?:なお、)?.{1,30}(?:御|ご)質問には、.{1,20}より(?:御|ご)答弁(?:申し上げ|いたし)ます。$"
+    ),
+
 }
 
 # 会派の一覧（2023年5月〜の任期。実データから拾い出したもの）。
@@ -341,6 +373,104 @@ def guess_tags(text: str):
     return tags
 
 
+# 章の宣言として認める行の最大の長さ（長い地の文を章と見間違えないため）。
+CHAPTER_MAX_LEN = 90
+
+
+def _clean_chapter_title(title: str) -> str:
+    """「災害対策に関する」「給食に関する幾つかの」→「災害対策」「給食」。"""
+    return re.sub(
+        r"(?:に関する|についての|に関しての|に対する|への|の)?(?:幾つかの|いくつかの)?$",
+        "", title,
+    ).strip(" 、,")
+
+
+def _clean_topic_title(title: str) -> str:
+    """「住民による合意形成についての」→「住民による合意形成」。"""
+    title = re.sub(r"(?:幾つかの|いくつかの)$", "", title)
+    return re.sub(
+        r"(?:について(?:の|も)?|に関して(?:の)?|に関する|につきまして(?:の)?|との|という|の)$",
+        "", title,
+    ).strip(" 、,")
+
+
+def split_answer(text: str):
+    """答弁1つ分の本文を、章と論点に分ける。
+
+    返すもの: (章のリスト, 件数のメモ)
+      章   = {"title": 章の見出し, "has_child_topics": 子の論点があるか,
+              "topics": [論点, ...]}
+      論点 = {"title": 見出し, "start": 本文の何文字目から, "end": 何文字目の手前まで,
+              "from_chapter": 章そのものを論点にしたものか}
+
+    ルール
+      ・あいさつ（○○議員の御質問にお答えします。）は保存しない。
+      ・「○○に関する御質問にお答えします。」は章。章そのものは本文と結び付けない。
+      ・章の中の「まず／次に／最後に、○○についてのお尋ねですが、」で始まる段落が論点。
+        次の論点か次の章が始まるまでが、その論点の範囲。
+      ・章の宣言のあとに論点の合図がなく中身が続く場合は、その章自体を1つの論点にする。
+      ・本文は書き換えない。論点は「本文のどこからどこまでか」という位置だけを持つ。
+    """
+    stats = {"greeting": 0, "handoff": 0, "empty_chapter": 0, "unlinked": 0}
+    chapters = []
+    chapter = None   # いま開いている章
+    topic = None     # いま開いている論点
+    pos = 0
+    for para in text.split("\n"):
+        start, end = pos, pos + len(para)
+        pos = end + 1
+
+        if PATTERNS["ans_greeting"].match(para):
+            stats["greeting"] += 1
+            continue
+        if PATTERNS["ans_handoff"].match(para):
+            stats["handoff"] += 1
+            continue
+
+        m = PATTERNS["ans_chapter"].match(para) if len(para) <= CHAPTER_MAX_LEN else None
+        if m:
+            chapter = {"title": _clean_chapter_title(m.group("title")), "topics": []}
+            chapters.append(chapter)
+            topic = None
+            continue
+
+        m = PATTERNS["ans_topic"].match(para[:140])
+        if m:
+            if chapter is None:
+                # 章の宣言なしに論点が始まった。章なしの論点として持つ。
+                chapter = {"title": "", "topics": []}
+                chapters.append(chapter)
+            topic = {"title": _clean_topic_title(m.group("title")),
+                     "start": start, "end": end, "from_chapter": False}
+            chapter["topics"].append(topic)
+            continue
+
+        # ふつうの本文
+        if chapter is None:
+            # 章も論点も始まっていない（再質問への短い答弁など）。どの論点にも結び付けない。
+            stats["unlinked"] += 1
+            continue
+        if topic is None:
+            # 章の宣言のあと、論点の合図なしに中身が続いた → 章そのものを論点にする
+            topic = {"title": chapter["title"], "start": start, "end": end,
+                     "from_chapter": True}
+            chapter["topics"].append(topic)
+        else:
+            topic["end"] = end
+
+    # 中身のない章（宣言の直後に次の宣言が来たもの）は保存しない。
+    # 例）「教育に関する御質問にお答えします。」の直後に
+    #     「初めに、給食に関する幾つかの御質問にお答えします。」が続く場合。
+    kept = []
+    for ch in chapters:
+        if not ch["topics"]:
+            stats["empty_chapter"] += 1
+            continue
+        ch["has_child_topics"] = any(not t["from_chapter"] for t in ch["topics"])
+        kept.append(ch)
+    return kept, stats
+
+
 def diagnose(path: Path, verbose: bool = True):
     """書式を調べるモード。どの行が何として認識されたかを表示する。"""
     paras = read_paragraphs(path)
@@ -437,6 +567,11 @@ def parse(path: Path, source_type: str, source_url: str = ""):
                 speaker_kind = "f"
                 if rest:
                     current["followup_text"] += rest + "\n"
+                current["speeches"].append({
+                    "speaker_kind": "member", "part": "followup",
+                    "name": name, "role": "",
+                    "text": (rest + "\n") if rest else "",
+                })
                 continue
             if current:
                 questions.append(current)
@@ -457,6 +592,14 @@ def parse(path: Path, source_type: str, source_url: str = ""):
                 "source_url": source_url,
                 "source_file": path.name,
                 "review_status": "unreviewed",   # 未チェック
+                # 1発言1行の層（データベースの speeches 表）に入れるための、発言の一覧。
+                # 質問 → 答弁 → 再質問 … と、会議録に出てきた順番のまま並べる。
+                # 議長の議事進行は、これまでどおり入れない。
+                "speeches": [{
+                    "speaker_kind": "member", "part": "question",
+                    "name": name, "role": "",
+                    "text": (rest + "\n") if rest else "",
+                }],
             }
             speaker_kind = "q"
             continue
@@ -469,11 +612,20 @@ def parse(path: Path, source_type: str, source_url: str = ""):
                 "name": ma.group("name") or "",
                 "text": (head + "\n") if head else "",
             })
+            current["speeches"].append({
+                "speaker_kind": "executive", "part": "answer",
+                "name": ma.group("name") or "", "role": ma.group("role"),
+                "text": (head + "\n") if head else "",
+            })
             speaker_kind = "a"
             continue
 
         if current is None:
             continue
+
+        # 発言の一覧にも、同じ行を足しておく（議長の話の続きは足さない）
+        if speaker_kind in ("q", "f", "a"):
+            current["speeches"][-1]["text"] += line + "\n"
 
         if speaker_kind == "q":
             mh = match_heading(line)
@@ -499,6 +651,16 @@ def parse(path: Path, source_type: str, source_url: str = ""):
         q["tags"] = guess_tags(basis)
         for a in q["answers"]:
             a["text"] = a["text"].strip()
+        # 名乗りから読み取った会派（届出で上書きする前のもの）を残しておく。
+        # データベース側で、会派の履歴に該当期間が無いときに使う。
+        q["stated_party"] = q["questioner_party"]
+        for sp in q["speeches"]:
+            sp["text"] = sp["text"].strip()
+            if sp["part"] == "answer":
+                # 答弁を、章と論点に分ける（本文は書き換えず、位置だけを記録する）
+                sp["chapters"], sp["split_stats"] = split_answer(sp["text"])
+        # 本文が空の発言（名前の行だけで終わったもの）は入れない
+        q["speeches"] = [sp for sp in q["speeches"] if sp["text"]]
 
     return questions
 
@@ -550,11 +712,40 @@ def main():
             print(f"{f.name}: 質問 {len(qs)} 件")
         all_q.extend(qs)
 
+    # 会期（定例会）ごとの開始日・終了日。一般質問のない日（初日・最終日など）も含めて、
+    # 渡されたファイル全部の日付から求める。データベースの council_sessions に使う。
+    session_range = {}
+    for f in files:
+        d, s, _ = meta_from_filename(f)
+        if d and s:
+            lo, hi = session_range.get(s, (d, d))
+            session_range[s] = (min(lo, d), max(hi, d))
+    for q in all_q:
+        lo, hi = session_range.get(q["session"], (q["meeting_date"], q["meeting_date"]))
+        q["session_start_date"], q["session_end_date"] = lo, hi
+
     fill_missing_parties(all_q)
     c = {k: sum(1 for q in all_q if q.get("party_source") == k)
          for k in ("official", "official_conflict", "stated", "carried", "unknown")}
     print(f"\n会派: 届出で確定 {c['official']} 件 / 届出と名乗りが不一致 {c['official_conflict']} 件"
           f" / 名乗りのみ {c['stated']} 件 / 引き継ぎ {c['carried']} 件 / 不明 {c['unknown']} 件")
+
+    # 発言と、答弁の中の章・論点の件数
+    speeches = [sp for q in all_q for sp in q["speeches"]]
+    answers = [sp for sp in speeches if sp["part"] == "answer"]
+    chapters = [ch for sp in answers for ch in sp["chapters"]]
+    topics = [t for ch in chapters for t in ch["topics"]]
+    st = {k: sum(sp["split_stats"][k] for sp in answers)
+          for k in ("greeting", "handoff", "empty_chapter", "unlinked")}
+    with_child = sum(1 for ch in chapters if ch["has_child_topics"])
+    child_topics = sum(1 for t in topics if not t["from_chapter"])
+    print(f"発言: {len(speeches)} 件（質問 {sum(1 for s in speeches if s['part'] == 'question')}"
+          f" / 答弁 {len(answers)} / 再質問 {sum(1 for s in speeches if s['part'] == 'followup')}）")
+    print(f"答弁のあいさつ（保存しない）: {st['greeting']} 件"
+          f" / 中身のない宣言（保存しない）: {st['empty_chapter']} 件")
+    print(f"章: {len(chapters)} 個（子の論点あり {with_child} / 章そのものが論点 {len(chapters) - with_child}）")
+    print(f"論点: {len(topics)} 個（合図のある論点 {child_topics}"
+          f" / 章そのものを論点にしたもの {len(topics) - child_topics}）")
 
     out_path = Path(args.out)
     # 出力先のフォルダが無ければ作る（既定の data/ など）
