@@ -852,48 +852,66 @@ export type Database = {
       }
       general_questions: {
         Row: {
+          content_origin: string
           council_session_id: string
           created_at: string | null
           id: string
+          meeting_date: string | null
           publish_status: string
           question_order: number
           questioner_name: string
           questioner_number: number | null
           questioner_party: string | null
           raw_text: string | null
+          review_status: string
+          section_id: string | null
           session_day: number
+          source_file: string | null
+          source_type: string
           source_url: string | null
           summary: string | null
           topics: Json
           updated_at: string | null
         }
         Insert: {
+          content_origin?: string
           council_session_id: string
           created_at?: string | null
           id?: string
+          meeting_date?: string | null
           publish_status?: string
           question_order?: number
           questioner_name: string
           questioner_number?: number | null
           questioner_party?: string | null
           raw_text?: string | null
+          review_status?: string
+          section_id?: string | null
           session_day?: number
+          source_file?: string | null
+          source_type?: string
           source_url?: string | null
           summary?: string | null
           topics?: Json
           updated_at?: string | null
         }
         Update: {
+          content_origin?: string
           council_session_id?: string
           created_at?: string | null
           id?: string
+          meeting_date?: string | null
           publish_status?: string
           question_order?: number
           questioner_name?: string
           questioner_number?: number | null
           questioner_party?: string | null
           raw_text?: string | null
+          review_status?: string
+          section_id?: string | null
           session_day?: number
+          source_file?: string | null
+          source_type?: string
           source_url?: string | null
           summary?: string | null
           topics?: Json
@@ -905,6 +923,13 @@ export type Database = {
             columns: ["council_session_id"]
             isOneToOne: false
             referencedRelation: "council_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_questions_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: true
+            referencedRelation: "sections"
             referencedColumns: ["id"]
           },
         ]
@@ -1572,6 +1597,183 @@ export type Database = {
           },
         ]
       }
+      meetings: {
+        Row: {
+          committee_name: string | null
+          council_session_id: string | null
+          created_at: string
+          day_label: string | null
+          id: string
+          kind: string
+          meeting_date: string
+          session_name: string | null
+          source_file: string
+          source_type: string
+          source_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          committee_name?: string | null
+          council_session_id?: string | null
+          created_at?: string
+          day_label?: string | null
+          id?: string
+          kind: string
+          meeting_date: string
+          session_name?: string | null
+          source_file: string
+          source_type: string
+          source_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          committee_name?: string | null
+          council_session_id?: string | null
+          created_at?: string
+          day_label?: string | null
+          id?: string
+          kind?: string
+          meeting_date?: string
+          session_name?: string | null
+          source_file?: string
+          source_type?: string
+          source_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_council_session_id_fkey"
+            columns: ["council_session_id"]
+            isOneToOne: false
+            referencedRelation: "council_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_aliases: {
+        Row: {
+          alias: string
+          alias_key: string | null
+          created_at: string
+          id: string
+          member_id: string
+        }
+        Insert: {
+          alias: string
+          alias_key?: string | null
+          created_at?: string
+          id?: string
+          member_id: string
+        }
+        Update: {
+          alias?: string
+          alias_key?: string | null
+          created_at?: string
+          id?: string
+          member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_aliases_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_faction_history: {
+        Row: {
+          basis: string
+          created_at: string
+          end_date: string | null
+          faction_id: string
+          id: string
+          member_id: string
+          note: string | null
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          basis: string
+          created_at?: string
+          end_date?: string | null
+          faction_id: string
+          id?: string
+          member_id: string
+          note?: string | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          basis?: string
+          created_at?: string
+          end_date?: string | null
+          faction_id?: string
+          id?: string
+          member_id?: string
+          note?: string | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_faction_history_faction_id_fkey"
+            columns: ["faction_id"]
+            isOneToOne: false
+            referencedRelation: "factions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_faction_history_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      members: {
+        Row: {
+          council_member_id: string | null
+          created_at: string
+          id: string
+          is_current: boolean
+          is_provisional: boolean
+          name: string
+          updated_at: string
+          yomi: string | null
+        }
+        Insert: {
+          council_member_id?: string | null
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          is_provisional?: boolean
+          name: string
+          updated_at?: string
+          yomi?: string | null
+        }
+        Update: {
+          council_member_id?: string | null
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          is_provisional?: boolean
+          name?: string
+          updated_at?: string
+          yomi?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_council_member_id_fkey"
+            columns: ["council_member_id"]
+            isOneToOne: true
+            referencedRelation: "council_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       press_conference_items: {
         Row: {
           created_at: string | null
@@ -1751,6 +1953,117 @@ export type Database = {
           },
         ]
       }
+      sections: {
+        Row: {
+          created_at: string
+          excluded_from_analysis: boolean | null
+          id: string
+          kind: string
+          meeting_id: string
+          section_order: number
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          excluded_from_analysis?: boolean | null
+          id?: string
+          kind: string
+          meeting_id: string
+          section_order: number
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          excluded_from_analysis?: boolean | null
+          id?: string
+          kind?: string
+          meeting_id?: string
+          section_order?: number
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sections_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      speeches: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          meeting_id: string
+          member_id: string | null
+          member_unconfirmed: boolean | null
+          section_id: string | null
+          speaker_kind: string
+          speaker_name_raw: string
+          speaker_role_raw: string | null
+          speech_order: number
+          stated_faction: string | null
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          meeting_id: string
+          member_id?: string | null
+          member_unconfirmed?: boolean | null
+          section_id?: string | null
+          speaker_kind: string
+          speaker_name_raw: string
+          speaker_role_raw?: string | null
+          speech_order: number
+          stated_faction?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          member_id?: string | null
+          member_unconfirmed?: boolean | null
+          section_id?: string | null
+          speaker_kind?: string
+          speaker_name_raw?: string
+          speaker_role_raw?: string | null
+          speech_order?: number
+          stated_faction?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "speeches_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "speeches_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "speeches_section_fkey"
+            columns: ["section_id", "meeting_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id", "meeting_id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           created_at: string
@@ -1918,6 +2231,103 @@ export type Database = {
           },
         ]
       }
+      topic_nodes: {
+        Row: {
+          created_at: string
+          id: string
+          level: string
+          node_order: number
+          parent_id: string | null
+          section_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level: string
+          node_order: number
+          parent_id?: string | null
+          section_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: string
+          node_order?: number
+          parent_id?: string | null
+          section_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_nodes_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "topic_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_nodes_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topic_speeches: {
+        Row: {
+          char_end: number | null
+          char_start: number | null
+          created_at: string
+          id: string
+          speech_id: string
+          topic_node_id: string
+        }
+        Insert: {
+          char_end?: number | null
+          char_start?: number | null
+          created_at?: string
+          id?: string
+          speech_id: string
+          topic_node_id: string
+        }
+        Update: {
+          char_end?: number | null
+          char_start?: number | null
+          created_at?: string
+          id?: string
+          speech_id?: string
+          topic_node_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_speeches_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "topic_speeches_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_speeches_topic_node_id_fkey"
+            columns: ["topic_node_id"]
+            isOneToOne: false
+            referencedRelation: "topic_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       jimu_jigyo_budget_timeline: {
@@ -1955,6 +2365,33 @@ export type Database = {
           },
         ]
       }
+      speech_factions: {
+        Row: {
+          faction_name: string | null
+          faction_source: string | null
+          history_faction_id: string | null
+          meeting_date: string | null
+          member_id: string | null
+          speech_id: string | null
+          stated_faction: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_faction_history_faction_id_fkey"
+            columns: ["history_faction_id"]
+            isOneToOne: false
+            referencedRelation: "factions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "speeches_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       count_reactions_by_report_ids: {
@@ -1965,6 +2402,7 @@ export type Database = {
           reaction_type: string
         }[]
       }
+      find_member_id: { Args: { p_notation: string }; Returns: string }
       get_admin_users: {
         Args: never
         Returns: {
@@ -1992,6 +2430,16 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      member_alias_key: { Args: { p_text: string }; Returns: string }
+      member_faction_id_on: {
+        Args: { p_date: string; p_member_id: string }
+        Returns: string
+      }
+      refresh_all_council_member_factions: { Args: never; Returns: undefined }
+      refresh_council_member_faction: {
+        Args: { p_member_id: string }
+        Returns: undefined
+      }
       set_active_council_session: {
         Args: { target_session_id: string }
         Returns: undefined
@@ -2042,12 +2490,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2071,11 +2519,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2096,11 +2544,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2121,11 +2569,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2138,11 +2586,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
