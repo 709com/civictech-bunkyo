@@ -5,6 +5,13 @@ import type {
   SessionQuestionOverview,
 } from "../../shared/types";
 
+/**
+ * 公開サイトで使う列だけを取り出す（GeneralQuestion 型と同じ並び）。
+ * review_status など内部管理用の列は、公開側には持ち出さない。
+ */
+const GENERAL_QUESTION_COLUMNS =
+  "id, council_session_id, questioner_name, questioner_party, questioner_number, session_day, question_order, summary, topics, raw_text, source_url, publish_status, created_at, updated_at";
+
 /** theme_lines(JSON) を Record<string, string[]> に正規化する */
 function parseThemeLines(raw: unknown): Record<string, string[]> {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
@@ -24,7 +31,7 @@ export async function findPublishedGeneralQuestionsBySession(
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("general_questions")
-    .select("*")
+    .select(GENERAL_QUESTION_COLUMNS)
     .eq("council_session_id", sessionId)
     .eq("publish_status", "published")
     .order("session_day", { ascending: true })
@@ -102,7 +109,7 @@ export async function findPublishedGeneralQuestionById(
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("general_questions")
-    .select("*")
+    .select(GENERAL_QUESTION_COLUMNS)
     .eq("id", id)
     .eq("publish_status", "published")
     .single();
