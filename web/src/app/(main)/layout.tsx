@@ -1,11 +1,9 @@
-import { GoogleAnalytics } from "@next/third-parties/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { ReactNode } from "react";
 import { Header } from "@/components/header";
 import { AuthGate } from "@/components/layouts/auth-gate";
 import { Footer } from "@/components/layouts/footer/footer";
 import { MainLayout } from "@/components/layouts/main-layout";
-import { env } from "@/lib/env";
 import { RubyfulInitializer } from "@/lib/rubyful";
 import { TextSizeInitializer } from "@/lib/text-size";
 
@@ -17,7 +15,6 @@ export default function MainGroupLayout({
   return (
     <>
       <SpeedInsights />
-      <GoogleAnalytics gaId={env.analytics.gaTrackingId ?? ""} />
       <TextSizeInitializer />
       <RubyfulInitializer />
       <AuthGate />

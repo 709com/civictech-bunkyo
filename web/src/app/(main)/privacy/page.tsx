@@ -72,19 +72,7 @@ export default function PrivacyPage() {
             Cookieとは、サーバーが利用者の識別を目的として、利用者のブラウザに送信し、端末に保存される情報です。
           </LegalParagraph>
           <LegalParagraph>
-            当ウェブサイトでは、Googleによるアクセス解析ツール「Googleアナリティクス」を使用しており、Googleアナリティクスはデータ収集のためにCookieを使用しています。データは匿名で収集されており、個人を特定するものではありません。この機能はお使いのブラウザの設定でCookieを無効にすることで拒否することができます。
-          </LegalParagraph>
-          <LegalParagraph>
-            Googleアナリティクスでデータが収集および処理される仕組みの詳細は
-            <a
-              href="https://policies.google.com/technologies/partner-sites"
-              target="_blank"
-              rel="noreferrer"
-              className="underline underline-offset-2"
-            >
-              「Googleのサービスを使用するサイトやアプリから収集した情報のGoogleによる使用」のページ
-            </a>
-            をご覧ください。
+            当ウェブサイトでは、文字の大きさやふりがなの表示などの設定を保存するために、Cookieまたはブラウザの保存領域を使用することがあります。これらに個人を特定する情報は含まれません。
           </LegalParagraph>
         </section>
 
