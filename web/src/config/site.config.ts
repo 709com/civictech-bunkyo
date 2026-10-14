@@ -31,7 +31,8 @@ export const siteConfig = {
      * お問い合わせ・誤りの報告の窓口（Googleフォーム1本）。
      * 空のあいだは、画面に「準備中」と表示する。
      */
-    contactForm: "" as string,
+    contactForm:
+      "https://docs.google.com/forms/d/e/1FAIpQLScM_PEshV6o6yq02lMlFljpgjg3DX0sFC0SP4kOidLYXwxi2g/viewform" as string,
     aboutNote: "",
     /**
      * 税金の使い道マップ（外部サイト）。
