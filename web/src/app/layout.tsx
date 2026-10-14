@@ -24,7 +24,7 @@ const lexendGiga = Lexend_Giga({
 });
 
 const ogImage = {
-  url: "/img/ogp-adachi.png",
+  url: "/img/ogp.png",
   width: 1200,
   height: 630,
   alt: `${siteConfig.siteName}のOGPイメージ`,
@@ -38,13 +38,13 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/icons/pwa/icon_adachi_192.png",
+        url: "/icons/pwa/icon_bunkyo_192.png",
         type: "image/png",
         sizes: "192x192",
       },
     ],
     // iOS は apple-touch-icon の SVG に非対応のため PNG を指定する
-    apple: [{ url: "/icons/pwa/icon_adachi_apple_180.png", sizes: "180x180" }],
+    apple: [{ url: "/icons/pwa/icon_bunkyo_apple_180.png", sizes: "180x180" }],
   },
   manifest: "/manifest.json",
   openGraph: {
@@ -76,7 +76,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#6fa9cc",
+  themeColor: "#4a5d6e",
 };
 
 export default function RootLayout({
@@ -89,7 +89,7 @@ export default function RootLayout({
       <body
         className={`${bizUDPGothic.variable} ${lexendGiga.variable} font-sans antialiased bg-mirai-surface-light`}
       >
-        <NextTopLoader showSpinner={false} color="#408cba" />
+        <NextTopLoader showSpinner={false} color="#4a5d6e" />
         {children}
       </body>
     </html>

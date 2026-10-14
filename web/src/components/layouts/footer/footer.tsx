@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/config/site.config";
 import { usePathname } from "next/navigation";
 import { isInterviewPage } from "@/lib/page-layout-utils";
 import { policyLinks, primaryLinks } from "./footer.config";
+import { SiteWordmark } from "@/components/layouts/site-wordmark";
 
 export function Footer() {
   const pathname = usePathname();
@@ -31,13 +31,7 @@ function FooterLogoSection() {
   return (
     <div className="flex flex-col items-center text-center mb-9">
       <Link href="/" aria-label={`${siteConfig.siteName} トップページ`}>
-        <Image
-          src="/img/brand-logo.png"
-          alt={siteConfig.siteName}
-          width={800}
-          height={97}
-          className="h-6 w-auto"
-        />
+        <SiteWordmark className="text-xl" />
       </Link>
     </div>
   );

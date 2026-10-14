@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search } from "lucide-react";
@@ -10,6 +9,7 @@ import { InterviewHeaderActions } from "@/features/interview-session/client/comp
 import { isInterviewPage, isMainPage } from "@/lib/page-layout-utils";
 import { siteConfig } from "@/config/site.config";
 import { HamburgerMenu } from "./hamburger-menu";
+import { SiteWordmark } from "@/components/layouts/site-wordmark";
 
 interface HeaderClientProps {
   difficultyLevel: DifficultyLevelEnum;
@@ -33,19 +33,8 @@ export function HeaderClient({ difficultyLevel }: HeaderClientProps) {
               className="flex items-center space-x-2"
               aria-label="ホーム"
             >
-              {/*
-                ロゴは横長（約9.3:1）でヘッダーの幅を大きく使うため、
-                狭い画面では高さ固定ではなく画面幅に追従させ、
-                右側のナビ（詳しく・検索・メニュー）が折り返さないようにする。
-              */}
-              <Image
-                src="/img/brand-logo.png"
-                alt={siteConfig.siteName}
-                width={800}
-                height={86}
-                priority
-                className="h-auto w-[30vw] min-[420px]:w-[28vw] sm:h-5 sm:w-auto"
-              />
+              {/* 文字だけの仮ロゴ。狭い画面でも右側のナビが折り返さない大きさにする */}
+              <SiteWordmark className="text-base sm:text-lg" />
             </Link>
           </div>
 

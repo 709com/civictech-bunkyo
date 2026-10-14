@@ -5,23 +5,23 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F7F4F0",
-  "theme_color": "#6fa9cc",
+  "theme_color": "#4a5d6e",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icons/pwa/icon_adachi_192.png",
+      "src": "/icons/pwa/icon_bunkyo_192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/pwa/icon_adachi_512.png",
+      "src": "/icons/pwa/icon_bunkyo_512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/pwa/icon_adachi_maskable_512.png",
+      "src": "/icons/pwa/icon_bunkyo_maskable_512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

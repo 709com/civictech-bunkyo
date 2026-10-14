@@ -1,51 +1,20 @@
-import Image from "next/image";
 import { siteConfig } from "@/config/site.config";
 
 /**
- * トップページのヒーローバナー。
- * 16:9 のイラスト（/img/hero_background.png）の上に、
- * 見出しテキストを CSS で重ねて表示する。
- * レイアウトは max-w-[700px] に収まるため、文字サイズはビューポート幅ではなく
- * コンテナ幅基準（cqw）でバナーの拡大縮小に追従させる。
+ * トップページのヒーロー（仮）。
+ * 正式なトップ画像が決まるまで、画像を使わず文字だけで表示する。
  */
 export function Hero() {
   return (
-    <div className="@container relative w-full aspect-[16/9] overflow-hidden bg-mirai-hero-bg">
-      <Image
-        src="/img/hero_background.png"
-        alt={siteConfig.councilName}
-        fill
-        priority
-        className="object-cover object-center"
-        sizes="(max-width: 700px) 100vw, 700px"
-        quality={85}
-      />
-
-      {/* SEO・読み上げ用の見出し（画面上はキャッチコピーを表示） */}
-      <h1 className="sr-only">{siteConfig.siteName}</h1>
-
-      {/*
-        キャッチコピー。イラストの上でも読めるよう白の半透明地を敷く。
-        md 未満は固定ヘッダーがヒーロー上部（約80px）に重なるため、
-        ヘッダーを避けた位置まで下げる。
-        md 以上はレイアウト側の mt-24 でヘッダーと重ならないので、
-        空が開いていて木の葉ともぶつからない右上に配置する。
-      */}
-      <div className="absolute right-[3%] top-[44%] w-[64%] md:top-[10%] md:right-[2%] md:w-[58%]">
-        <p className="whitespace-nowrap rounded-lg bg-white/70 px-2 py-1 text-center font-bold leading-[1.9] text-mirai-text drop-shadow-sm text-[clamp(0.6rem,3.5cqw,1.75rem)] md:px-4 md:py-2 md:text-[clamp(0.6rem,3.2cqw,1.6rem)]">
-          いま{siteConfig.councilName}で話されていることを
-          <br />
-          やさしい言葉で説明します
-        </p>
-      </div>
-
-      {/* スクロールインジケーター */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center animate-bounce-gentle md:bottom-8">
-        <div className="w-[1px] h-[34px] bg-black"></div>
-        <p className="mt-2 font-lexend text-[10px] leading-[20px] text-black">
-          Scroll
-        </p>
-      </div>
+    <div className="w-full bg-mirai-hero-bg px-6 py-12 md:px-10 md:py-16">
+      <h1 className="text-3xl font-bold tracking-wide text-primary-accent md:text-4xl">
+        {siteConfig.siteName}
+      </h1>
+      <p className="mt-4 text-base font-bold leading-relaxed text-mirai-text md:text-lg">
+        {siteConfig.councilName}の本会議の一般質問を、
+        <br />
+        会議録をもとに探せるようにしています。
+      </p>
     </div>
   );
 }

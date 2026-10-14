@@ -1,6 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import { siteConfig } from "@/config/site.config";
+import { SiteWordmark } from "@/components/layouts/site-wordmark";
 
 /**
  * デスクトップメニュー: ロゴ (画面左上)
@@ -11,15 +10,8 @@ export function DesktopMenuLogo() {
       href="/"
       className="fixed top-6 left-6 z-50 flex flex-col gap-2 hover:opacity-90 transition-opacity"
     >
-      {/* ロゴ（サイト名を含むワードマーク） */}
-      <Image
-        src="/img/brand-logo.png"
-        alt={`${siteConfig.siteName}ロゴ`}
-        width={800}
-        height={97}
-        priority
-        className="h-10 w-auto"
-      />
+      {/* 文字だけの仮ロゴ */}
+      <SiteWordmark className="text-2xl" />
 
       {/* キャッチコピー */}
       <p
