@@ -23,7 +23,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 一般質問以外の機能を隠しているあいだは、そのページを開いても404にする
+  // 一般質問以外の機能を隠しているあいだは、そのページを存在しないページと同じ扱いにする
+  // （not-found.tsx により、トップページへ移動する）
   if (
     !siteConfig.features.showOtherSections &&
     isOtherSectionPath(request.nextUrl.pathname)

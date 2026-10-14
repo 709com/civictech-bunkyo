@@ -1,6 +1,7 @@
 /**
  * 一般質問以外の機能のページ。
- * site.config.ts の features.showOtherSections が false のあいだは開けない（「見つかりません」になる）。
+ * site.config.ts の features.showOtherSections が false のあいだは開けない
+ * （存在しないページと同じ扱いになり、トップページへ移動する）。
  */
 const OTHER_SECTION_PATH_PREFIXES = [
   "/bills", // 議案（AIインタビューを含む）
