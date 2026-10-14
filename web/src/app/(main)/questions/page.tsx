@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
 import { getActiveCouncilSession } from "@/features/council-sessions/server/loaders/get-active-council-session";
+import { ListOrderNotice } from "@/features/general-questions/server/components/list-order-notice";
 import { GeneralQuestionList } from "@/features/general-questions/server/components/general-question-list";
 import { getLatestSessionWithQuestions } from "@/features/general-questions/server/loaders/get-latest-session-with-questions";
 
@@ -30,7 +31,10 @@ export default async function QuestionsPage() {
 
   return (
     <Container className="py-8">
-      <h1 className="mb-6 text-2xl font-bold text-mirai-text">一般質問</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-mirai-text">一般質問</h1>
+        <ListOrderNotice />
+      </div>
       <GeneralQuestionList questions={[]} />
     </Container>
   );

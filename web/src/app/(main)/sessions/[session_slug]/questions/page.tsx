@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
 import { getCouncilSessionBySlug } from "@/features/council-sessions/server/loaders/get-council-session-by-slug";
+import { ListOrderNotice } from "@/features/general-questions/server/components/list-order-notice";
 import { SessionTopicsView } from "@/features/general-questions/server/components/session-topics-view";
 import { getGeneralQuestionOverviewBySession } from "@/features/general-questions/server/loaders/get-general-question-overview-by-session";
 import { getGeneralQuestionsBySession } from "@/features/general-questions/server/loaders/get-general-questions-by-session";
@@ -57,6 +58,7 @@ export default async function SessionQuestionsPage({ params }: Props) {
         <p className="mt-2 text-sm text-mirai-text-secondary">
           議員が問い、区が答えた。あなたの暮らしに関わる取り組みをテーマ別にまとめました。
         </p>
+        <ListOrderNotice />
       </div>
       <SessionTopicsView questions={questions} overview={overview} />
     </Container>
