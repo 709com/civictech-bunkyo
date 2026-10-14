@@ -94,10 +94,7 @@ function FooterPolicies() {
 function FooterDisclaimer() {
   return (
     <p className="text-[11px] text-slate-500 text-center mt-1 mb-3 leading-relaxed">
-      このサービスは政党チームみらいが運営しているものではありません
-      <br />
-      また、{siteConfig.cityName}、{siteConfig.councilName}
-      の公式サイトではありません。
+      {siteConfig.disclaimer}
     </p>
   );
 }

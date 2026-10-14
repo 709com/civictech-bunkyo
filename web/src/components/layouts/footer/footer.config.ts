@@ -30,6 +30,10 @@ export const primaryLinks: FooterLink[] = [
 
 export const policyLinks: FooterPolicyLink[] = [
   {
+    label: "運営者情報",
+    href: "/about",
+  },
+  {
     label: "よくあるご質問",
     href: "/faq",
   },

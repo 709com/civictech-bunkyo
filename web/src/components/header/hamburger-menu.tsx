@@ -19,6 +19,7 @@ const NAV_LINKS = [
   { href: "/members", label: "議員" },
   { href: "/learn", label: "学ぶ" },
   { href: "/archive", label: "過去の資料" },
+  { href: "/about", label: "運営者情報" },
 ] as const;
 
 export function HamburgerMenu() {
