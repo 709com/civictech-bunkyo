@@ -33,6 +33,8 @@ ingest_minutes.py が作った data/out.json（本会議の一般質問）を読
     見つからない表記は、新しい議員を作らず「未確認」のまま入れる。
   ・会派は、会派の履歴（member_faction_history）に発言日の期間があればそれを使い、
     無ければ本人の名乗りをそのまま使う。
+  ・選挙期間中（web/src/config/site.config.ts の electionBlackout の期間）は、
+    --apply を付けてもデータベースに入れない（データ更新の休止。設計書 9-6）。
   ・命令書（data/load_minutes.sql）には会議録の本文が入るので、GitHubには上げない
     （data/ は .gitignore で除外済み）。
 """
@@ -43,6 +45,7 @@ import re
 import subprocess
 import sys
 import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -233,6 +236,26 @@ def build_sql(questions) -> tuple[str, dict]:
     return "\n\n".join(out) + "\n", counts
 
 
+def election_blackout_period():
+    """公開サイトの設定（web/src/config/site.config.ts）から、選挙期間中の休止の期間を読む。
+
+    返すもの: (開始日, 終了日)。どちらかが空なら None。
+    """
+    text = (ROOT / "web" / "src" / "config" / "site.config.ts").read_text(encoding="utf-8")
+    m = re.search(
+        r'electionBlackout:\s*\{[^}]*?start:\s*"([^"]*)"[^}]*?end:\s*"([^"]*)"', text, re.S
+    )
+    if not m or not m.group(1) or not m.group(2):
+        return None
+    return m.group(1), m.group(2)
+
+
+def in_election_blackout(today: str) -> bool:
+    """その日（"YYYY-MM-DD"）が、選挙期間中の休止の期間に入っているか。両端を含む。"""
+    period = election_blackout_period()
+    return bool(period) and period[0] <= today <= period[1]
+
+
 def db_container() -> str:
     """supabase/config.toml の project_id から、データベースのコンテナ名を作る。"""
     text = (ROOT / "supabase" / "config.toml").read_text(encoding="utf-8")
@@ -273,6 +296,13 @@ def main():
     if not args.apply:
         print("データベースにはまだ入れていません。入れるときは --apply を付けてください。")
         return
+
+    # 選挙期間中（告示日〜投開票日）は、データの更新を休止する（設計書 9-6）
+    today = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
+    if in_election_blackout(today):
+        start, end = election_blackout_period()
+        sys.exit(f"選挙期間中（{start}〜{end}）のため、データの更新を休止しています。"
+                 "データベースには何も入れていません。")
 
     container = db_container()
     print(f"\nデータベース（{container}）に流し込みます……")

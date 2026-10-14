@@ -40,6 +40,20 @@ export const siteConfig = {
     taxMap: "" as string,
   },
   /**
+   * 選挙期間中の休止（設計書 9-6）。告示日から投開票日まで（両端を含む。"YYYY-MM-DD"）。
+   * 期間中は、全ページのヘッダー直下に休止のお知らせを出し、
+   * 会議録の取り込み（load_minutes.py --apply）も止まる。空のあいだは何もしない。
+   */
+  electionBlackout: {
+    start: "" as string,
+    end: "" as string,
+  },
+  /**
+   * 次回更新予定（設計書 9-7）。トップページに表示する。空なら表示しない。
+   * 例: "2026年11月定例会 閉会後10日頃"
+   */
+  nextUpdateNote: "" as string,
+  /**
    * 非公式であることの表示（設計書 9-1）。
    * ヘッダー直下の帯と、フッターの両方に表示する。
    */

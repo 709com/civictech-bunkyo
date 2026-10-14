@@ -88,14 +88,21 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-4">
-          <LegalSectionTitle>第5条（規約の変更）</LegalSectionTitle>
+          <LegalSectionTitle>第5条（選挙期間中の休止）</LegalSectionTitle>
+          <LegalParagraph>
+            運営者は、公職選挙法および政治的公平性に配慮し、選挙の告示日から投開票日までの間、本サービスのデータ更新および一部機能を休止します。休止の期間は、本サービス上でお知らせします。
+          </LegalParagraph>
+        </section>
+
+        <section className="space-y-4">
+          <LegalSectionTitle>第6条（規約の変更）</LegalSectionTitle>
           <LegalParagraph>
             運営者は必要に応じて本規約を変更することができ、変更後にユーザーが本サービスを利用した場合、当該変更に同意したものとみなします。
           </LegalParagraph>
         </section>
 
         <section className="space-y-4">
-          <LegalSectionTitle>第6条（準拠法・管轄）</LegalSectionTitle>
+          <LegalSectionTitle>第7条（準拠法・管轄）</LegalSectionTitle>
           <LegalParagraph>
             本規約は日本法に準拠し、本サービスに関連して生じる一切の紛争については、
             {siteConfig.operator.jurisdiction}

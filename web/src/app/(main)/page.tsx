@@ -9,6 +9,7 @@ import { GeneralQuestionsBanner } from "@/components/top/general-questions-banne
 import { JimuJigyoArchiveSection } from "@/components/top/jimu-jigyo-archive-section";
 import { JimuJigyoBanner } from "@/components/top/jimu-jigyo-banner";
 import { Hero } from "@/components/top/hero";
+import { NextUpdateNote } from "@/components/top/next-update-note";
 import { siteConfig } from "@/config/site.config";
 import { getDifficultyLevel } from "@/features/bill-difficulty/server/loaders/get-difficulty-level";
 import { BillDisclaimer } from "@/features/bills/client/components/bill-detail/bill-disclaimer";
@@ -62,6 +63,9 @@ export default async function Home() {
   return (
     <>
       <Hero />
+
+      {/* 次回更新予定（設定が空なら出さない） */}
+      <NextUpdateNote />
 
       {/* 本日の定例会セクション */}
       {showOther && <CurrentCouncilSession session={currentSession} />}
