@@ -80,7 +80,7 @@ export default function PrivacyPage() {
         <section className="space-y-4">
           <LegalSectionTitle>6. 個人情報の保管期間</LegalSectionTitle>
           <LegalParagraph>
-            取得した個人情報は、政治資金規正法等の法令に基づき、必要な期間（原則として7年間）保管した後、適切な方法により廃棄・削除いたします。
+            お問い合わせフォームでいただいた内容は、回答と本サイトの運営のために必要な期間のみ保管し、それ以外の目的（政治活動や選挙運動を含む）には使用しません。
           </LegalParagraph>
         </section>
 
