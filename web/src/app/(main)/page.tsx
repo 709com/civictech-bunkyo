@@ -56,15 +56,18 @@ export default async function Home() {
     };
   };
 
+  // 一般質問以外の機能（議案・記者会見・予算など）を出すか。設定1つで切り替える
+  const showOther = siteConfig.features.showOtherSections;
+
   return (
     <>
       <Hero />
 
       {/* 本日の定例会セクション */}
-      <CurrentCouncilSession session={currentSession} />
+      {showOther && <CurrentCouncilSession session={currentSession} />}
 
       {/* 区長記者会見バナー */}
-      {latestPressConference && (
+      {showOther && latestPressConference && (
         <Container className="pt-4">
           <PressConferenceNoticeBanner
             pressConference={latestPressConference}
@@ -79,57 +82,65 @@ export default async function Home() {
         </Container>
       )}
 
-      {/* 委員会バナー */}
-      <Container className="pt-3">
-        <CommitteeBanner />
-      </Container>
+      {showOther && (
+        <>
+          {/* 委員会バナー */}
+          <Container className="pt-3">
+            <CommitteeBanner />
+          </Container>
 
-      {/* 予算・事務事業評価・お金の使い道（まとめてアコーディオン） */}
-      <Container className="pt-3">
-        <BannerAccordion
-          title={`${siteConfig.cityName}の予算・評価・お金の使い道`}
-          description="各部の重点施策、事務事業評価、財政の状況をまとめて見る"
-        >
-          {latestBudgetSession?.slug && (
-            <BudgetOverviewBanner sessionSlug={latestBudgetSession.slug} />
-          )}
-          <JimuJigyoBanner />
-          <CityFinanceBanner />
-        </BannerAccordion>
-      </Container>
+          {/* 予算・事務事業評価・お金の使い道（まとめてアコーディオン） */}
+          <Container className="pt-3">
+            <BannerAccordion
+              title={`${siteConfig.cityName}の予算・評価・お金の使い道`}
+              description="各部の重点施策、事務事業評価、財政の状況をまとめて見る"
+            >
+              {latestBudgetSession?.slug && (
+                <BudgetOverviewBanner sessionSlug={latestBudgetSession.slug} />
+              )}
+              <JimuJigyoBanner />
+              <CityFinanceBanner />
+            </BannerAccordion>
+          </Container>
+        </>
+      )}
 
       {/* 議案一覧セクション */}
-      <Container className="">
-        <div className="py-10">
-          <main className="flex flex-col gap-16">
-            {/* 注目の議案セクション */}
-            <FeaturedBillSection bills={featuredBills} />
+      {showOther && (
+        <Container className="">
+          <div className="py-10">
+            <main className="flex flex-col gap-16">
+              {/* 注目の議案セクション */}
+              <FeaturedBillSection bills={featuredBills} />
 
-            {/* タグ別議案一覧セクション */}
-            <BillsByTagSection billsByTag={billsByTag} />
-          </main>
-        </div>
-      </Container>
-
-      {/* Archive セクション（区長記者会見・事務事業評価のアーカイブ＋過去の資料への導線） */}
-      <div className="bg-mirai-surface-muted py-10">
-        <Container>
-          <div className="flex flex-col gap-8">
-            <ArchiveBanner />
-            <PressConferenceArchiveSection
-              pressConferences={pressConferences}
-            />
-            <JimuJigyoArchiveSection />
+              {/* タグ別議案一覧セクション */}
+              <BillsByTagSection billsByTag={billsByTag} />
+            </main>
           </div>
         </Container>
-      </div>
+      )}
+
+      {/* Archive セクション（区長記者会見・事務事業評価のアーカイブ＋過去の資料への導線） */}
+      {showOther && (
+        <div className="bg-mirai-surface-muted py-10">
+          <Container>
+            <div className="flex flex-col gap-8">
+              <ArchiveBanner />
+              <PressConferenceArchiveSection
+                pressConferences={pressConferences}
+              />
+              <JimuJigyoArchiveSection />
+            </div>
+          </Container>
+        </div>
+      )}
 
       <Container>
         {/* このサイトについて セクション */}
         <About />
 
-        {/* 免責事項 */}
-        <BillDisclaimer />
+        {/* 免責事項（議案の掲載内容についての注意） */}
+        {showOther && <BillDisclaimer />}
       </Container>
 
       {/* チャット機能 */}

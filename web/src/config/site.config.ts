@@ -78,5 +78,12 @@ export const siteConfig = {
     aiChat: false,
     /** AIインタビュー機能（議案当事者へのヒアリング）*/
     aiInterview: false,
+    /**
+     * 一般質問以外の機能を公開するか（設計書 第6章：第1段階は本会議の一般質問だけ）。
+     * 議案・区長記者会見・事務事業評価・予算・委員会・お金の使い道・議員一覧・学ぶ・過去の資料。
+     * false のあいだは、メニュー・トップ・検索から消え、ページを直接開いても「見つかりません」になる。
+     * 対象のページは web/src/lib/other-sections.ts にまとめてある。
+     */
+    showOtherSections: false as boolean,
   },
 } as const;

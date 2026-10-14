@@ -12,15 +12,21 @@ import {
 import { RubyToggle } from "@/lib/rubyful";
 import { TextSizeToggle } from "@/lib/text-size";
 
+/** other: 一般質問以外の機能（site.config.ts の features.showOtherSections が false なら出さない） */
 const NAV_LINKS = [
-  { href: "/", label: "トップページ" },
-  { href: "/assembly", label: "議会" },
-  { href: "/budget", label: "予算" },
-  { href: "/members", label: "議員" },
-  { href: "/learn", label: "学ぶ" },
-  { href: "/archive", label: "過去の資料" },
-  { href: "/about", label: "運営者情報" },
+  { href: "/", label: "トップページ", other: false },
+  { href: "/questions", label: "一般質問", other: false },
+  { href: "/assembly", label: "議会", other: true },
+  { href: "/budget", label: "予算", other: true },
+  { href: "/members", label: "議員", other: true },
+  { href: "/learn", label: "学ぶ", other: true },
+  { href: "/archive", label: "過去の資料", other: true },
+  { href: "/about", label: "運営者情報", other: false },
 ] as const;
+
+const VISIBLE_NAV_LINKS = NAV_LINKS.filter(
+  (link) => siteConfig.features.showOtherSections || !link.other
+);
 
 export function HamburgerMenu() {
   return (
@@ -38,7 +44,7 @@ export function HamburgerMenu() {
       <PopoverContent className="w-52" align="end">
         <nav className="flex flex-col">
           <ul className="flex flex-col divide-y divide-mirai-border">
-            {NAV_LINKS.map(({ href, label }) => (
+            {VISIBLE_NAV_LINKS.map(({ href, label }) => (
               <li key={href}>
                 <Link
                   href={href}

@@ -18,6 +18,7 @@ import type {
   QuestionSearchResult,
   BudgetSearchResult,
 } from "../../shared/types/search-types";
+import { siteConfig } from "@/config/site.config";
 
 const TAB_LABELS: Record<SearchTab, string> = {
   all: "すべて",
@@ -190,7 +191,12 @@ export function SearchResultTabs({ query, results }: Props) {
     { key: "bills", count: bills.length },
     { key: "questions", count: questions.length },
     { key: "budget", count: budgets.length },
-  ];
+  ].filter(
+    // 一般質問以外の機能を隠しているあいだは、議案・予算のタブを出さない
+    ({ key }) =>
+      siteConfig.features.showOtherSections ||
+      (key !== "bills" && key !== "budget")
+  ) as { key: SearchTab; count: number }[];
 
   return (
     <div>

@@ -1,4 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { siteConfig } from "./config/site.config";
+import { isOtherSectionPath } from "./lib/other-sections";
 import {
   DIFFICULTY_COOKIE_NAME,
   DIFFICULTY_COOKIE_OPTIONS,
@@ -19,6 +21,14 @@ export function middleware(request: NextRequest) {
       return NextResponse.rewrite(new URL("/not-found", request.url));
     }
     return NextResponse.next();
+  }
+
+  // 一般質問以外の機能を隠しているあいだは、そのページを開いても404にする
+  if (
+    !siteConfig.features.showOtherSections &&
+    isOtherSectionPath(request.nextUrl.pathname)
+  ) {
+    return NextResponse.rewrite(new URL("/not-found", request.url));
   }
 
   const response = _handleDifficultyCookie(request);

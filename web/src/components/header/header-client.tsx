@@ -17,7 +17,9 @@ interface HeaderClientProps {
 
 export function HeaderClient({ difficultyLevel }: HeaderClientProps) {
   const pathname = usePathname();
-  const showDifficultySelector = isMainPage(pathname);
+  // 難易度の切り替えは議案の解説用。一般質問以外の機能を隠しているあいだは出さない
+  const showDifficultySelector =
+    siteConfig.features.showOtherSections && isMainPage(pathname);
   const showInterviewActions = isInterviewPage(pathname);
 
   return (
