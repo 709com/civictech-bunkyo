@@ -17,13 +17,11 @@ export function Footer() {
   return (
     <footer className="bg-mirai-gradient text-slate-900">
       <div className="mx-auto flex w-full max-w-[500px] flex-col items-center px-6 py-14 pb-20 text-center">
-        {/* サイト自身のワードマークのため、チームみらい表記のフラグとは切り離して常に表示する */}
         <FooterLogoSection />
         <FooterPrimaryLinks />
         <FooterPolicies />
         <FooterDisclaimer />
         <FooterOperator />
-        {siteConfig.features.showTeamMiraiSection && <FooterCopyright />}
       </div>
     </footer>
   );
@@ -109,13 +107,5 @@ function FooterOperator() {
     <p className="text-[12px] font-medium text-slate-700 text-center mb-2">
       運営：{siteConfig.operator.name}
     </p>
-  );
-}
-
-function FooterCopyright() {
-  return (
-    <div className="text-center text-sm font-medium text-slate-800">
-      © 2025 Team Mirai All rights Reserved
-    </div>
   );
 }

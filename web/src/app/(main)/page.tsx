@@ -9,7 +9,6 @@ import { GeneralQuestionsBanner } from "@/components/top/general-questions-banne
 import { JimuJigyoArchiveSection } from "@/components/top/jimu-jigyo-archive-section";
 import { JimuJigyoBanner } from "@/components/top/jimu-jigyo-banner";
 import { Hero } from "@/components/top/hero";
-import { TeamMirai } from "@/components/top/team-mirai";
 import { siteConfig } from "@/config/site.config";
 import { getDifficultyLevel } from "@/features/bill-difficulty/server/loaders/get-difficulty-level";
 import { BillDisclaimer } from "@/features/bills/client/components/bill-detail/bill-disclaimer";
@@ -126,11 +125,8 @@ export default async function Home() {
       </div>
 
       <Container>
-        {/* みらい議会とは セクション */}
+        {/* このサイトについて セクション */}
         <About />
-
-        {/* チームみらいについて セクション */}
-        <TeamMirai />
 
         {/* 免責事項 */}
         <BillDisclaimer />

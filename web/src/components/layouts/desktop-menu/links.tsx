@@ -8,15 +8,6 @@ type FooterLinkItem = {
 };
 
 const links: FooterLinkItem[] = [
-  ...(siteConfig.features.showTeamMiraiSection
-    ? ([
-        {
-          label: "チームみらいについて",
-          href: siteConfig.externalLinks.teamAbout,
-          external: true,
-        },
-      ] as FooterLinkItem[])
-    : []),
   {
     label: "利用規約",
     href: "/terms",

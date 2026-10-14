@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { siteConfig } from "@/config/site.config";
 import { LinkButton } from "./link-button";
 
@@ -52,62 +51,10 @@ export function About() {
             </LinkButton>
           )}
 
-          {/* 非公式運営時: 帰属・免責表記 */}
-          {!siteConfig.features.showTeamMiraiSection && (
-            <div className="flex flex-col gap-4 pt-2 border-t border-gray-200">
-              <div className="flex flex-col gap-2 text-[13px] leading-relaxed text-mirai-text-secondary">
-                <p>
-                  このサイトは「チームみらい」開発の「みらい議会」をベースに作成しています。
-                </p>
-
-                <div className="flex flex-col gap-4">
-                  <LinkButton
-                    href="https://team-mir.ai/"
-                    icon={{
-                      // 縦横比 42:36 のため高さは 21 で指定する
-                      src: "/icons/team-mirai-mark.svg",
-                      alt: "",
-                      width: 24,
-                      height: 21,
-                    }}
-                  >
-                    「チームみらい」について
-                  </LinkButton>
-
-                  <LinkButton
-                    href="https://gikai.team-mir.ai/"
-                    icon={{
-                      src: "/icons/interview-icon-3.svg",
-                      alt: "",
-                      width: 18,
-                      height: 17,
-                    }}
-                  >
-                    本家「みらい議会」（国会版）を見に行く
-                  </LinkButton>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1 text-[13px] leading-relaxed text-mirai-text-secondary">
-                <p>
-                  このサイトは「チームみらい」の公式ではない、非公式のサイトです。
-                  <br />
-                  ご意見や不具合等がございましたら党公式への連絡ではなく、
-                  <br />
-                  開発者の
-                  <Link
-                    href={siteConfig.operator.contactUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline underline-offset-2 hover:opacity-70 transition-opacity"
-                  >
-                    {siteConfig.operator.developerName}
-                  </Link>
-                  にご連絡お願いします。
-                </p>
-              </div>
-            </div>
-          )}
+          {/* ソフトウェアの表記（AGPL-3.0）。党の公式サイトへのリンクや党のマークは置かない */}
+          <p className="pt-4 border-t border-gray-200 text-[13px] leading-relaxed text-mirai-text-secondary">
+            {siteConfig.software.creditText}
+          </p>
         </div>
       </div>
     </div>

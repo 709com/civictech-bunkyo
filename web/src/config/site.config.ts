@@ -25,11 +25,6 @@ export const siteConfig = {
   externalLinks: {
     report: "https://forms.gle/ipRL17jxKVc7z4nL9",
     aboutNote: "",
-    donation: "https://team-mir.ai/support/donation",
-    teamAbout: "https://team-mir.ai/about",
-    terms: "https://team-mir.ai/terms",
-    privacy: "https://team-mir.ai/privacy",
-    faq: "https://team-mirai.notion.site/FAQ-28cf6f56bae180bd84e7f7ae80f806a1",
     /**
      * 税金の使い道マップ（外部サイト）。
      * pref=13 は東京都、entity=131211 は足立区の全国地方公共団体コード。
@@ -59,6 +54,15 @@ export const siteConfig = {
     jurisdiction: "東京地方裁判所" as string,
   },
   /**
+   * ソフトウェアの表記（AGPL-3.0）
+   * 元にしたオープンソースと、改変後のソースコードの公開場所。
+   * 党の公式サイトへのリンクや党のマークは置かず、この表記だけにする。
+   */
+  software: {
+    creditText: "team-mirai/mirai-gikai（AGPL-3.0）を改変して利用",
+    sourceCodeUrl: "https://github.com/709com/civictech-bunkyo",
+  },
+  /**
    * AI機能の有効/無効設定
    * 本番環境のコスト管理のため、機能ごとにオン/オフを切り替えられます。
    */
@@ -67,10 +71,5 @@ export const siteConfig = {
     aiChat: false,
     /** AIインタビュー機能（議案当事者へのヒアリング）*/
     aiInterview: false,
-    /**
-     * チームみらいセクションの表示（トップページ・フッター・デスクトップメニュー）
-     * 非公式運営など、党の公式サービスとして出さない場合は false にする。
-     */
-    showTeamMiraiSection: false as boolean,
   },
 } as const;
