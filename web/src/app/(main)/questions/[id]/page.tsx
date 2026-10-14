@@ -9,6 +9,7 @@ import { QuestionChatView } from "@/features/general-questions/client/components
 import { QuestionViewToggle } from "@/features/general-questions/client/components/question-view-toggle";
 import { getGeneralQuestionById } from "@/features/general-questions/server/loaders/get-general-question-by-id";
 import { getCouncilSessionById } from "@/features/council-sessions/server/loaders/get-council-session-by-id";
+import { getOfficialMinutesLink } from "@/features/general-questions/shared/utils/official-minutes-link";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -55,6 +56,11 @@ export default async function GeneralQuestionDetailPage({ params }: Props) {
   const dayLabel =
     DAY_LABELS[question.session_day] ?? `第${question.session_day}日`;
 
+  const minutesLink = getOfficialMinutesLink(
+    question.source_url,
+    siteConfig.councilMinutesUrl
+  );
+
   return (
     <Container className="py-8 max-w-2xl">
       <div className="mb-4">
@@ -95,19 +101,18 @@ export default async function GeneralQuestionDetailPage({ params }: Props) {
         <QuestionChatView topics={question.topics} />
       )}
 
-      {question.source_url && (
-        <div className="mt-8 pt-6 border-t border-border">
-          <Link
-            href={question.source_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            公式会議録を見る
-          </Link>
-        </div>
-      )}
+      {/* 原典の URL が用意できるまでは、会議録検索システムのトップへの仮のリンクにする */}
+      <div className="mt-8 pt-6 border-t border-border">
+        <Link
+          href={minutesLink.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm text-primary-accent hover:underline"
+        >
+          <ExternalLink className="w-4 h-4" />
+          {minutesLink.label}
+        </Link>
+      </div>
     </Container>
   );
 }
