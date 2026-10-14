@@ -7,6 +7,7 @@ import {
   getYearLabel,
   isValidYear,
 } from "@/features/jimu-jigyo/server/loaders/load-jimu-jigyo-list";
+import { siteConfig } from "@/config/site.config";
 
 type Props = {
   params: Promise<{ year: string }>;
@@ -22,8 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isValidYear(year)) return { title: "事務事業評価" };
   return {
     title: `事務事業分析（${getYearLabel(year)}）`,
-    description:
-      "足立区の事務事業マネジメントシートをもとに、KPI・予算・効率の動向を分析したページです。",
+    description: `${siteConfig.cityName}の事務事業マネジメントシートをもとに、KPI・予算・効率の動向を分析したページです。`,
   };
 }
 

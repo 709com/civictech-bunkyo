@@ -28,7 +28,9 @@ export function BillShareButtonsClient({
   };
 
   const handleReport = () => {
-    window.open(siteConfig.externalLinks.report, "_blank");
+    // 窓口のフォームが未設定（準備中）のあいだは何もしない
+    if (!siteConfig.externalLinks.contactForm) return;
+    window.open(siteConfig.externalLinks.contactForm, "_blank");
   };
 
   return (

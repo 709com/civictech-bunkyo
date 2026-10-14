@@ -5,6 +5,7 @@ import { ChatTranscript } from "../../client/components/chat-transcript";
 import type { CommitteeMeetingDetail } from "../../shared/types";
 import { buildTranscriptSections } from "../../shared/utils/build-transcript-sections";
 import { formatJapaneseDate } from "../../shared/utils/format-japanese-date";
+import { siteConfig } from "@/config/site.config";
 
 type Props = {
   meeting: CommitteeMeetingDetail;
@@ -42,7 +43,7 @@ export function TranscriptView({ meeting }: Props) {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-primary-accent hover:underline"
         >
-          足立区議会 会議録検索システム
+          {siteConfig.councilName} 会議録検索システム
           <ExternalLink className="size-3" />
         </a>
       </p>

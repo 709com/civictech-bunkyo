@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { PressConference } from "../../shared/types";
+import { siteConfig } from "@/config/site.config";
 
 type Props = {
   pressConferences: PressConference[];
@@ -19,7 +20,8 @@ export function PressConferenceArchiveSection({ pressConferences }: Props) {
           区長記者会見
         </h2>
         <p className="text-xs text-mirai-text-secondary">
-          足立区長が記者の皆さんと直接やりとりした内容をわかりやすくお届けします
+          {siteConfig.cityName}
+          長が記者の皆さんと直接やりとりした内容をわかりやすくお届けします
         </p>
       </div>
 

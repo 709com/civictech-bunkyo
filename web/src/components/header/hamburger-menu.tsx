@@ -62,15 +62,17 @@ export function HamburgerMenu() {
               <ExternalLink className="h-3.5 w-3.5 shrink-0" />
               {siteConfig.councilName}（外部サイト）
             </a>
-            <a
-              href={siteConfig.externalLinks.taxMap}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-2 py-2 text-sm text-mirai-text-secondary hover:text-primary-accent transition-colors"
-            >
-              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-              税金の使い道マップ（外部サイト）
-            </a>
+            {siteConfig.externalLinks.taxMap && (
+              <a
+                href={siteConfig.externalLinks.taxMap}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2 py-2 text-sm text-mirai-text-secondary hover:text-primary-accent transition-colors"
+              >
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                税金の使い道マップ（外部サイト）
+              </a>
+            )}
           </div>
         </nav>
       </PopoverContent>

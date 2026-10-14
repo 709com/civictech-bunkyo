@@ -11,6 +11,7 @@ import {
 } from "../../shared/utils/committee-type";
 import { formatJapaneseDate } from "../../shared/utils/format-japanese-date";
 import { pickMajorTopics } from "../../shared/utils/pick-major-topics";
+import { siteConfig } from "@/config/site.config";
 
 /** 「最近の委員会」カードに載せる主要トピックの最大件数 */
 const CARD_TOPIC_LIMIT = 5;
@@ -38,7 +39,8 @@ export function CommitteesView({ archives, meetings }: Props) {
           委員会で話し合われたこと
         </h1>
         <p className="text-sm text-mirai-text-secondary leading-relaxed">
-          足立区議会には、テーマごとにくわしく議論する「委員会」があります。
+          {siteConfig.councilName}
+          には、テーマごとにくわしく議論する「委員会」があります。
           それぞれの委員会でどんな質疑や答弁があったのかを、会議ごとに記録して残していきます。
         </p>
       </header>

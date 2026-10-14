@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ContactFormLink } from "@/components/contact/contact-form-link";
 import { Container } from "@/components/layouts/container";
 import {
   LegalList,
@@ -99,17 +100,10 @@ export default function PrivacyPage() {
           </LegalParagraph>
           <LegalParagraph>お問い合わせ窓口</LegalParagraph>
           <LegalParagraph>
-            {siteConfig.operator.name} 個人情報保護管理責任者
+            {siteConfig.operator.name}（運営者） 個人情報保護管理責任者
           </LegalParagraph>
           <LegalParagraph>
-            <a
-              href={siteConfig.operator.contactUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="underline underline-offset-2"
-            >
-              {siteConfig.operator.contactUrl}
-            </a>
+            <ContactFormLink />
           </LegalParagraph>
         </section>
       </Container>

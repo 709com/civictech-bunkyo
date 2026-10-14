@@ -1,5 +1,6 @@
 import "server-only";
 import Link from "next/link";
+import { siteConfig } from "@/config/site.config";
 
 export function AboutScorePage() {
   return (
@@ -16,7 +17,8 @@ export function AboutScorePage() {
           この分析の見方について
         </h1>
         <p className="text-sm text-mirai-text-secondary mt-2">
-          足立区が公開する「事務事業マネジメントシート」（令和6年度実施分）をもとに、
+          {siteConfig.cityName}
+          が公開する「事務事業マネジメントシート」（令和6年度実施分）をもとに、
           KPI・予算・効率の3軸で事業の動向を自動分析しています。
         </p>
         <div className="mt-3 p-3 bg-mirai-surface-warm border border-mirai-border rounded-lg text-sm text-mirai-text-secondary">

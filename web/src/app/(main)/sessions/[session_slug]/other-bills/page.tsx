@@ -11,6 +11,7 @@ import {
 } from "@/features/bills/shared/utils/bill-status";
 import { getCouncilSessionBySlug } from "@/features/council-sessions/server/loaders/get-council-session-by-slug";
 import { formatDateJST } from "@/lib/utils/date";
+import { siteConfig } from "@/config/site.config";
 
 interface OtherBillsRouteProps {
   params: Promise<{
@@ -101,7 +102,7 @@ export default async function OtherBillsRoute({
             rel="noopener noreferrer"
             className="inline-flex w-fit items-center gap-1 text-sm font-medium text-primary-accent"
           >
-            {session.name}のすべての議案を足立区議会サイトで見る
+            {session.name}のすべての議案を{siteConfig.councilName}サイトで見る
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         )}

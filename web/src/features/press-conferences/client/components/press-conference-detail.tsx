@@ -3,6 +3,7 @@
 import { ExternalLink, FileText, Mic, PlayCircle } from "lucide-react";
 import type { PressConference } from "../../shared/types";
 import { QaItem } from "./qa-item";
+import { siteConfig } from "@/config/site.config";
 
 type Props = {
   pressConference: PressConference;
@@ -32,7 +33,8 @@ export function PressConferenceDetail({ pressConference }: Props) {
           {pressConference.title}
         </h1>
         <p className="text-sm text-mirai-text-secondary leading-relaxed">
-          足立区長が記者の皆さんと直接やりとりした内容を、わかりやすくお届けします。
+          {siteConfig.cityName}
+          長が記者の皆さんと直接やりとりした内容を、わかりやすくお届けします。
         </p>
         {pressConference.youtubeUrl && (
           <a

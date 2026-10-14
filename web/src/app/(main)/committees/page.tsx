@@ -1,9 +1,10 @@
 import { Container } from "@/components/layouts/container";
 import { CommitteesView } from "@/features/committee-minutes/server/components/committees-view";
 import { getCommitteeArchives } from "@/features/committee-minutes/server/loaders/get-committee-archives";
+import { siteConfig } from "@/config/site.config";
 
 export const metadata = {
-  title: "委員会で話し合われたこと | 足立区議会",
+  title: `委員会で話し合われたこと | ${siteConfig.councilName}`,
 };
 
 export default async function CommitteesPage() {

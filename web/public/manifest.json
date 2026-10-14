@@ -1,7 +1,7 @@
 {
-  "name": "みらい議会＠足立区",
-  "short_name": "みらい議会＠足立区",
-  "description": "足立区議会で今どんな議案が検討されているか、わかりやすく伝えるプラットフォーム",
+  "name": "ぶんきょう議会ナビ",
+  "short_name": "ぶんきょう議会ナビ",
+  "description": "文京区議会の本会議一般質問を検索できる非公式サイトです",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F7F4F0",

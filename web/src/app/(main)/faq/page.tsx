@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ContactFormLink } from "@/components/contact/contact-form-link";
 import { Container } from "@/components/layouts/container";
 import {
   LegalPageLayout,
@@ -23,51 +24,46 @@ const faqs: FaqItem[] = [
     question: `${siteConfig.siteName}とは何ですか？`,
     answer: (
       <>
-        {siteConfig.siteDescription}
-        。議案の情報収集や解説にAIを活用し、区民の皆さまが議会の動向を把握しやすくすることを目的としています。
+        {siteConfig.siteDescription}。{siteConfig.councilName}
+        の本会議で行われた一般質問を、公式会議録をもとに機械的に整理して掲載しています。
       </>
     ),
   },
   {
-    question: "チームみらいの公式サービスですか？",
+    question: "公式のサービスですか？",
     answer: (
       <>
-        いいえ、{siteConfig.siteName}
-        はチームみらいの公式サービスではありません。「チームみらい」が開発・公開した「みらい議会」をベースに、有志が独自に運営している非公式サービスです。
+        いいえ。{siteConfig.disclaimer}
         <br />
-        ご意見・不具合等は、チームみらい公式ではなく、開発者（
-        <Link
-          href={siteConfig.operator.contactUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="underline underline-offset-2"
-        >
-          {siteConfig.operator.developerName}
+        運営者や費用については
+        <Link href="/about" className="underline underline-offset-2">
+          運営者情報
         </Link>
-        ）にご連絡ください。
+        をご覧ください。
       </>
     ),
   },
   {
-    question: "議案の情報はどこから取得していますか？",
+    question: "掲載している情報はどこから取得していますか？",
     answer: (
       <>
+        {siteConfig.councilName}の公式会議録（
         <Link
-          href={siteConfig.councilBillsDetailUrl}
+          href={siteConfig.councilMinutesUrl}
           target="_blank"
           rel="noreferrer"
           className="underline underline-offset-2"
         >
-          {siteConfig.councilName}公式サイト
+          会議録検索システム
         </Link>
-        に公開されている情報をもとに掲載しています。最新情報や正確な内容については公式サイトをご確認ください。
+        ）および区が公表する速報版に基づいています。正確な表現・意図は、必ず公式会議録をご確認ください。
       </>
     ),
   },
   {
-    question: "AIによる解説は正確ですか？",
+    question: "掲載内容は正確ですか？",
     answer:
-      "AIが生成する解説は参考情報であり、正確性・完全性・最新性を保証するものではありません。重要な判断の際は必ず公式情報をご確認ください。",
+      "掲載データは、会議録を機械的に処理したものです。正確性・完全性・最新性を保証するものではありません。重要な判断の際は、必ず公式会議録をご確認ください。",
   },
   {
     question: "個人情報はどのように扱われますか？",
@@ -85,27 +81,12 @@ const faqs: FaqItem[] = [
     ),
   },
   {
-    question: "不具合や意見はどこに連絡すればいいですか？",
+    question: "誤りの報告や意見はどこに連絡すればいいですか？",
     answer: (
       <>
-        開発者（
-        <Link
-          href={siteConfig.operator.contactUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="underline underline-offset-2"
-        >
-          {siteConfig.operator.developerName}
-        </Link>
-        ）までご連絡ください。なお、チームみらいの公式窓口への連絡はご遠慮ください。
-      </>
-    ),
-  },
-  {
-    question: "「注目の議案」はどのような基準で選ばれているのでしょうか？",
-    answer: (
-      <>
-        議案の内容や報道の状況などを見ながら、注目度の高い議案を開発者で選定しています。
+        本サイトの
+        <ContactFormLink />
+        までお寄せください。掲載内容について、区や区議会事務局へお問い合わせいただいてもお答えできませんので、ご注意ください。
       </>
     ),
   },

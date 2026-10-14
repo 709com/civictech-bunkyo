@@ -3,10 +3,11 @@ import { siteConfig } from "@/config/site.config";
 
 /**
  * トップページから「税金の使い道マップ（外部サイト）」への導線バナー。
- * 足立区の歳入・歳出を可視化する外部サイトに遷移する。
- * URLはハンバーガーメニューと共用のため site.config.ts に集約している。
+ * 区の歳入・歳出を可視化する外部サイトに遷移する。
+ * URLはハンバーガーメニューと共用のため site.config.ts に集約している（空なら表示しない）。
  */
 export function CityFinanceBanner() {
+  if (!siteConfig.externalLinks.taxMap) return null;
   return (
     <a
       href={siteConfig.externalLinks.taxMap}
@@ -18,7 +19,7 @@ export function CityFinanceBanner() {
         <Coins className="w-6 h-6 text-primary shrink-0 mt-0.5" />
         <div>
           <p className="font-bold text-mirai-text">
-            足立区のお金の使い道（外部サイト）
+            {siteConfig.cityName}のお金の使い道（外部サイト）
           </p>
           <p className="mt-0.5 text-sm text-mirai-text-secondary">
             「税金の使い道マップ」で区の収入と支出をわかりやすく見られます

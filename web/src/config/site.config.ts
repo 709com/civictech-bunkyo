@@ -4,36 +4,47 @@
  * @see docs/kawasaki/20260304_1000_別地域向けfork手順.md
  */
 export const siteConfig = {
-  siteName: "みらい議会＠足立区",
-  siteDescription:
-    "足立区議会で今どんな議案が検討されているか、わかりやすく伝えるプラットフォームです",
-  cityName: "足立区",
-  councilName: "足立区議会",
+  siteName: "ぶんきょう議会ナビ",
+  siteDescription: "文京区議会の本会議一般質問を検索できる非公式サイトです",
+  cityName: "文京区",
+  councilName: "文京区議会",
   keywords: [
-    "みらい議会ー足立区版",
-    "議案",
-    "足立区",
+    "ぶんきょう議会ナビ",
+    "文京区議会",
+    "文京区",
+    "一般質問",
     "区議会",
-    "地方政治",
-    "政策",
-    "解説",
+    "会議録",
   ],
-  councilBaseUrl: "https://www.gikai-adachi.jp/",
-  /** 議案・議決結果の一覧ページ（平成14年第4回定例会以降の議決結果） */
-  councilBillsDetailUrl: "https://www.gikai-adachi.jp/g07_giketsu.asp?Sflg=2",
-  twitterHashtag: "みらい議会足立区版", // # なし
+  /** 文京区議会のトップページ */
+  councilBaseUrl: "https://www.city.bunkyo.lg.jp/kugikai/index.html",
+  /**
+   * 議案・議決結果の一覧ページ。
+   * 文京区版では議案の機能を公開していないため、議会のトップページを指しておく。
+   */
+  councilBillsDetailUrl: "https://www.city.bunkyo.lg.jp/kugikai/index.html",
+  /** 会議録検索システム（掲載内容の原典） */
+  councilMinutesUrl: "https://www.city.bunkyo.tokyo.dbsr.jp/",
+  twitterHashtag: "ぶんきょう議会ナビ", // # なし
   externalLinks: {
-    report: "https://forms.gle/ipRL17jxKVc7z4nL9",
+    /**
+     * お問い合わせ・誤りの報告の窓口（Googleフォーム1本）。
+     * 空のあいだは、画面に「準備中」と表示する。
+     */
+    contactForm: "" as string,
     aboutNote: "",
     /**
      * 税金の使い道マップ（外部サイト）。
-     * pref=13 は東京都、entity=131211 は足立区の全国地方公共団体コード。
-     * トップのバナーとハンバーガーメニューの両方から参照するため、
-     * URLはここに集約する（別地域向けにForkする場合はここだけ変更する）。
+     * 文京区版では未設定（空のあいだは表示しない）。
      */
-    taxMap:
-      "https://inshatancountry-jpn-tax-map.com/local-tax/?pref=13&entity=131211",
+    taxMap: "" as string,
   },
+  /**
+   * 非公式であることの表示（設計書 9-1）。
+   * ヘッダー直下の帯と、フッターの両方に表示する。
+   */
+  disclaimer:
+    "本サイトは文京区および文京区議会の公式サービスではありません。区議会議員 高浜直樹が私費で運営する非公式サイトです。政党チームみらいとも関係ありません。",
   /**
    * ページを管理する政党名（空文字列の場合は政党名を省略した汎用表現を使用）
    * 例: "チームみらい"
@@ -44,12 +55,8 @@ export const siteConfig = {
    * 利用規約・プライバシーポリシー・著作権表示に使用します。
    */
   operator: {
-    /** 運営者（＝当団体。利用規約・プライバシーポリシー・コピーライト表記に使用） */
-    name: "ワクワクみらい政策ラボ" as string,
-    /** 開発者（トップ・FAQの「開発者（◯◯）にご連絡」表記に使用） */
-    developerName: "みる" as string,
-    /** 問い合わせ先（開発者のXアカウント） */
-    contactUrl: "https://x.com/miyuki_miru0707" as string,
+    /** 運営者（利用規約・プライバシーポリシー・フッターの表記に使用）。私費による非公式運営 */
+    name: "高浜直樹" as string,
     /** 利用規約の準拠法・管轄裁判所（第一審の専属的合意管轄） */
     jurisdiction: "東京地方裁判所" as string,
   },

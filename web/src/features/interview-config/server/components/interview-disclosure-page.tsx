@@ -3,6 +3,7 @@ import "server-only";
 import { DEFAULT_INTERVIEW_CHAT_MODEL } from "@/lib/ai/models";
 import { DisclosureBreadcrumb } from "../../shared/components/disclosure-breadcrumb";
 import type { InterviewConfig } from "../loaders/get-interview-config";
+import { siteConfig } from "@/config/site.config";
 
 interface InterviewDisclosurePageProps {
   billId: string;
@@ -79,7 +80,8 @@ function StaticDisclosureSection() {
                 </li>
                 <li>
                   <span className="font-bold">公開を希望する場合：</span>
-                  回答データは「みらい議会」上に掲載され、他のユーザーが閲覧可能な状態で公開されます。これにより、利用者間での意見の共有および議論の活性化を図ります。
+                  回答データは「{siteConfig.siteName}
+                  」上に掲載され、他のユーザーが閲覧可能な状態で公開されます。これにより、利用者間での意見の共有および議論の活性化を図ります。
                 </li>
               </ul>
             </div>

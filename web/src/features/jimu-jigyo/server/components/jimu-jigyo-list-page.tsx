@@ -7,6 +7,7 @@ import {
   getYearLabel,
   loadJimuJigyoList,
 } from "../loaders/load-jimu-jigyo-list";
+import { siteConfig } from "@/config/site.config";
 
 type Props = {
   year: JimuJigyoYear;
@@ -42,7 +43,8 @@ export async function JimuJigyoListPage({
           事務事業 分析（{getYearLabel(year)}）
         </h1>
         <p className="text-sm text-mirai-text-secondary mt-1">
-          足立区 {summary.total}事業のKPI・予算・効率の動向を分析します。
+          {siteConfig.cityName} {summary.total}
+          事業のKPI・予算・効率の動向を分析します。
         </p>
         <div className="mt-2">
           <Link

@@ -22,7 +22,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <p className="text-xs text-muted-foreground">
-              © 2025 チームみらい. All rights reserved.
+              © {siteConfig.siteName}（運営：高浜直樹・私費による非公式運営）
             </p>
           </div>
         </CardContent>
