@@ -63,7 +63,7 @@ export default function PrivacyPage() {
         <section className="space-y-4">
           <LegalSectionTitle>4. 安全管理措置について</LegalSectionTitle>
           <LegalParagraph>
-            個人情報の適切な管理を行うために、責任者を定めた上で、厳正な管理・監督体制を構築しています。
+            個人情報は、運営者が責任を持って適切に管理します。
           </LegalParagraph>
         </section>
 
@@ -81,6 +81,10 @@ export default function PrivacyPage() {
           <LegalSectionTitle>6. 個人情報の保管期間</LegalSectionTitle>
           <LegalParagraph>
             お問い合わせフォームでいただいた内容は、回答と本サイトの運営のために必要な期間のみ保管し、それ以外の目的（政治活動や選挙運動を含む）には使用しません。
+          </LegalParagraph>
+          <LegalParagraph>
+            お問い合わせフォームは Google LLC が提供する Google
+            フォームを利用しており、送信された内容は同社のサービス上に保存されます。
           </LegalParagraph>
         </section>
 
