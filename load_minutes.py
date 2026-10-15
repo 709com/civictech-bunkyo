@@ -81,6 +81,28 @@ def session_slug(session: str) -> str:
     return f"r{year}-{int(m.group(2)):02d}{suffix}"
 
 
+# 文京区議会 会議録検索システム。定例会ごとの会議録一覧ページの URL は、
+# 「会議の種類（Cabinet）」と「会期の初日・最終日」で決まる（トップページのリンクで確認済み）。
+MINUTES_LIST_URL = (
+    "https://www.city.bunkyo.tokyo.dbsr.jp/100000?Template=list&QueryType=New&ListOrder=Asc"
+    "&Cabinet={cabinet}&TermStart={start}&TermEnd={end}"
+)
+# 本会議の会議の種類 → Cabinet の番号
+MINUTES_CABINET = {"招集議会": 1, "定例議会": 2, "臨時議会": 3}
+
+
+def session_minutes_url(session: str, start: str, end: str) -> str:
+    """定例会ごとの会議録一覧ページの URL。会議の種類が読めなければ空。
+
+    例）令和8年2月定例議会（2026-02-09〜2026-03-17）
+      → ...&Cabinet=2&TermStart=2026-02-09&TermEnd=2026-03-17
+    """
+    m = re.search(r"(定例議会|臨時議会|招集議会)", session or "")
+    if not m or not start or not end:
+        return ""
+    return MINUTES_LIST_URL.format(cabinet=MINUTES_CABINET[m.group(1)], start=start, end=end)
+
+
 def day_number(day_label: str) -> int:
     """「2日目」→ 2。読めなければ 1。"""
     m = re.search(r"(\d+)", day_label or "")
@@ -209,7 +231,9 @@ def build_sql(questions) -> tuple[str, dict]:
               f"    {lit(q['stated_party'])}),\n"
               f"  {lit(json.dumps(gq_topics, ensure_ascii=False))}::jsonb,\n"
               f"  {lit(raw_transcript(q))},\n"
-              f"  {lit(q['source_url'])}, 'draft', {lit(q['source_type'])}, 'unreviewed', 'extracted',"
+              # 原典リンク：指定が無ければ、定例会ごとの会議録一覧ページ
+              f"  {lit(q['source_url'] or session_minutes_url(q['session'], q['session_start_date'], q['session_end_date']))},"
+              f" 'draft', {lit(q['source_type'])}, 'unreviewed', 'extracted',"
               f" {date}::date, {lit(q['source_file'])}, {lit(section_id)});")
 
     # ---- 入れた件数が合っているか、確定する前に確かめる ---------------------
