@@ -5,9 +5,10 @@ import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
 import { getCouncilSessionBySlug } from "@/features/council-sessions/server/loaders/get-council-session-by-slug";
 import { ListOrderNotice } from "@/features/general-questions/server/components/list-order-notice";
-import { SessionTopicsView } from "@/features/general-questions/server/components/session-topics-view";
-import { getGeneralQuestionOverviewBySession } from "@/features/general-questions/server/loaders/get-general-question-overview-by-session";
+import { SessionQuestionList } from "@/features/general-questions/server/components/session-question-list";
+import { SessionSwitcher } from "@/features/general-questions/server/components/session-switcher";
 import { getGeneralQuestionsBySession } from "@/features/general-questions/server/loaders/get-general-questions-by-session";
+import { getSessionsWithQuestions } from "@/features/general-questions/server/loaders/get-sessions-with-questions";
 
 type Props = {
   params: Promise<{ session_slug: string }>;
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: Props) {
 
   return {
     title: `${session.name}の一般質問 | ${siteConfig.siteName}`,
-    description: `${session.name}で行われた一般質問の一覧です。議員が区長・部長に直接質問した内容をわかりやすく解説します。`,
+    description: `${session.name}の本会議で行われた一般質問の一覧です（登壇順）。掲載内容は会議録から機械的に抜き出したものです。`,
   };
 }
 
@@ -35,9 +36,9 @@ export default async function SessionQuestionsPage({ params }: Props) {
     notFound();
   }
 
-  const [questions, overview] = await Promise.all([
+  const [questions, sessions] = await Promise.all([
     getGeneralQuestionsBySession(session.id),
-    getGeneralQuestionOverviewBySession(session.id),
+    getSessionsWithQuestions(),
   ]);
 
   return (
@@ -56,11 +57,15 @@ export default async function SessionQuestionsPage({ params }: Props) {
           {session.name}の一般質問
         </h1>
         <p className="mt-2 text-sm text-mirai-text-secondary">
-          議員が問い、区が答えた。あなたの暮らしに関わる取り組みをテーマ別にまとめました。
+          本会議で行われた一般質問を、日付順・登壇した順に掲載しています。見出しや本文は会議録から機械的に抜き出したものです。
         </p>
         <ListOrderNotice />
       </div>
-      <SessionTopicsView questions={questions} overview={overview} />
+      <SessionQuestionList questions={questions} />
+      <SessionSwitcher
+        sessions={sessions}
+        currentSlug={session.slug ?? session_slug}
+      />
     </Container>
   );
 }

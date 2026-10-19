@@ -1,29 +1,14 @@
 import "server-only";
 import { createAdminClient } from "@mirai-gikai/supabase";
-import type {
-  GeneralQuestion,
-  SessionQuestionOverview,
-} from "../../shared/types";
+import type { GeneralQuestion, SessionWithQuestions } from "../../shared/types";
+import { sortSessionsNewestFirst } from "../../shared/utils/speaking-order";
 
 /**
  * 公開サイトで使う列だけを取り出す（GeneralQuestion 型と同じ並び）。
  * review_status など内部管理用の列は、公開側には持ち出さない。
  */
 const GENERAL_QUESTION_COLUMNS =
-  "id, council_session_id, questioner_name, questioner_party, questioner_number, session_day, question_order, summary, topics, raw_text, source_url, publish_status, created_at, updated_at";
-
-/** theme_lines(JSON) を Record<string, string[]> に正規化する */
-function parseThemeLines(raw: unknown): Record<string, string[]> {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
-  const out: Record<string, string[]> = {};
-  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
-    if (Array.isArray(value)) {
-      const lines = value.filter((v): v is string => typeof v === "string");
-      if (lines.length > 0) out[key] = lines;
-    }
-  }
-  return out;
-}
+  "id, council_session_id, questioner_name, questioner_party, questioner_number, session_day, question_order, meeting_date, summary, topics, raw_text, source_url, publish_status, created_at, updated_at";
 
 export async function findPublishedGeneralQuestionsBySession(
   sessionId: string
@@ -34,6 +19,7 @@ export async function findPublishedGeneralQuestionsBySession(
     .select(GENERAL_QUESTION_COLUMNS)
     .eq("council_session_id", sessionId)
     .eq("publish_status", "published")
+    .order("meeting_date", { ascending: true })
     .order("session_day", { ascending: true })
     .order("question_order", { ascending: true });
 
@@ -41,6 +27,8 @@ export async function findPublishedGeneralQuestionsBySession(
     throw new Error(`Failed to fetch general questions: ${error.message}`);
   }
 
+  // 並びは登壇順（日付 → 定例会の何日目か → その日の登壇順）。
+  // 上の order は念のため。画面側でも sortBySpeakingOrder で並べ直す。
   return (data ?? []).map((row) => ({
     ...row,
     topics: Array.isArray(row.topics) ? row.topics : [],
@@ -48,29 +36,43 @@ export async function findPublishedGeneralQuestionsBySession(
 }
 
 /**
- * セッション単位のオーバービュー（全体3行＋テーマ別3行）を取得する。
- * 行が未生成の場合は lines=null / themeLines={} を返す。
+ * 公開中の一般質問がある定例会を、新しい順（開会日の降順）で返す。
+ * 定例会どうしの切り替えの一覧に使う。
  */
-export async function findGeneralQuestionOverviewBySession(
-  sessionId: string
-): Promise<SessionQuestionOverview> {
+export async function findSessionsWithPublishedQuestions(): Promise<
+  SessionWithQuestions[]
+> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("general_question_overviews")
-    .select("lines, theme_lines")
-    .eq("council_session_id", sessionId)
-    .maybeSingle();
 
-  if (error) {
+  const { data: rows, error: qErr } = await supabase
+    .from("general_questions")
+    .select("council_session_id")
+    .eq("publish_status", "published");
+
+  if (qErr) {
     throw new Error(
-      `Failed to fetch general question overview: ${error.message}`
+      `Failed to fetch sessions with general questions: ${qErr.message}`
     );
   }
+  if (!rows?.length) return [];
 
-  const rawLines = data?.lines;
-  const lines =
-    Array.isArray(rawLines) && rawLines.length > 0 ? rawLines : null;
-  return { lines, themeLines: parseThemeLines(data?.theme_lines) };
+  const ids = [...new Set(rows.map((r) => r.council_session_id))];
+
+  const { data: sessions, error: sErr } = await supabase
+    .from("council_sessions")
+    .select("id, name, slug, start_date")
+    .in("id", ids)
+    .order("start_date", { ascending: false });
+
+  if (sErr) {
+    throw new Error(`Failed to fetch council sessions: ${sErr.message}`);
+  }
+
+  const withSlug = (sessions ?? []).filter(
+    (s): s is SessionWithQuestions =>
+      typeof s.slug === "string" && s.slug !== ""
+  );
+  return sortSessionsNewestFirst(withSlug);
 }
 
 export async function findLatestSessionSlugWithPublishedQuestions(): Promise<

@@ -18,7 +18,7 @@ export function GeneralQuestionsBanner({
         <div>
           <p className="font-bold text-mirai-text">一般質問</p>
           <p className="mt-0.5 text-sm text-mirai-text-secondary">
-            議員が区長・部長に直接質問した内容をわかりやすく解説します
+            本会議の一般質問を、会議録から抜き出して登壇順に掲載しています
           </p>
         </div>
       </div>
