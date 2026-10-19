@@ -1,201 +1,99 @@
-# みらい議会ー福岡市版
+# ぶんきょう議会ナビ
 
-公開URL: （デプロイ後に更新）
+文京区議会の本会議で行われた一般質問を、検索・閲覧できる非公式のサイトです。
 
-## 注意事項
+- 第1段階として、本会議の一般質問（直近1期分）を掲載します。
+- 一般質問は、定例会ごとに日付順・登壇した順に並べています。掲載順・表示順は支持や評価を示すものではありません。
 
-- このプロジェクトは「チームみらい」が開発・運営している「みらい議会」をForkして開発したものとなります。
-- **非公式**ですので、ここでの不具合や気になる点についての問い合わせは
-  党公式ではなく開発担当者にご連絡ください。
+## 非公式であることについて
 
-## 他地方議会向けForkガイド
+本サイトは文京区および文京区議会の公式サービスではありません。区議会議員 高浜直樹が私費で運営する非公式サイトです。政党チームみらいとも関係ありません。
 
-- 他の市議会・県議会等のバージョンを作成したい場合は、
-  以下のドキュメントを参考にすると早いと思います
-  [fork手順](docs/kawasaki/20260304_1000_別地域向けfork手順.md)
+## 掲載内容について
+
+- 掲載している見出しや本文は、会議録からプログラムで機械的に抜き出したものです。AI による要約文ではありません。
+- 抜き出しの誤りがありうるため、正確な表現は公式の会議録（文京区議会 会議録検索システム https://www.city.bunkyo.tokyo.dbsr.jp/ ）でご確認ください。
+
+## お問い合わせ
+
+内容の誤りのご報告やお問い合わせは、サイトの問い合わせフォームからお願いします。
+
+https://docs.google.com/forms/d/e/1FAIpQLScM_PEshV6o6yq02lMlFljpgjg3DX0sFC0SP4kOidLYXwxi2g/viewform
+
+## ライセンスとクレジット
+
+- ライセンス：AGPL-3.0（[LICENSE](LICENSE)）。改変したソースコードもこのリポジトリで公開しています。
+- team-mirai/mirai-gikai（AGPL-3.0）を改変して利用しています。
+- Fork の系譜：team-mirai/mirai-gikai → bakumon1107/mirai-gikai-fukuoka-city → 川崎版 → wakuwakumirailab/mirai-gikai-adachi → 709com/civictech-bunkyo（このリポジトリ）
 
 ---
 
-## コントリビューション
+## 開発者向け
 
-### このリポジトリの構造
+### 前提
 
-このリポジトリはチームみらいが開発する「みらい議会」の福岡市版をさらに Fork した **足立区版** です。
+- Node.js 20 以上 / pnpm 9 以上 / Docker
 
-```
-【チームみらい（最上流）】team-mirai/mirai-gikai
-  kawasaki/develop
-       ↓ 良い更新があれば取り込む
-【福岡市版（上流）】bakumon1107/mirai-gikai-fukuoka-city
-  fukuoka-city/develop
-       ↓ 良い更新があれば取り込む
-【このリポジトリ】wakuwakumirailab/mirai-gikai-adachi
-  fukuoka-city/develop ← 上流（福岡市版）のコピー（コントリビューターは触らない）
-  adachi/develop       ← 足立区版の開発ブランチ ★ PRの送り先はここ
-       ↑ PR を送る
-【コントリビューター】your-name/mirai-gikai-adachi（Fork）
-  feature/your-feature  ← ブランチ名は自由
-```
-
-**`fukuoka-city/develop` は福岡市版の更新を取り込む専用レーンです。コントリビューターは `adachi/develop` だけ意識してください。**
-
-### ローカル環境のセットアップ
-
-**前提条件**: Node.js 20+ / pnpm 9+ / Docker
+### ローカルでの起動
 
 ```bash
-# 1. クローン
-git clone https://github.com/wakuwakumirailab/mirai-gikai-adachi.git
-cd mirai-gikai-adachi
-
-# 2. 環境変数を設定
-cp .env.example .env
-
-# 3. パッケージインストール
+# 1. パッケージのインストール
 pnpm install
 
-# 4. Supabase 起動 + DB 初期化
+# 2. 環境変数の設定（必要に応じて .env の内容を変更してください）
+cp .env.example .env
+
+# 3. ローカルの Supabase を起動
 npx supabase start
+
+# 4. データベースの初期化と開発用シードデータの投入
+#    （ローカルのデータベースの中身はすべて消えて作り直されます。
+#      公開用のデータベースに対しては実行しないでください）
 pnpm db:reset
 
-# 5. 開発サーバー起動
-pnpm dev   # web(:3000) + admin(:3001)
+# 5. 開発サーバーの起動
+pnpm dev   # 公開サイト web（:3002）＋ 管理画面 admin（:3001）
 ```
 
-開発用 Admin アカウント: `admin@example.com` / `admin123456`
-
-> [!NOTE]
-> `pnpm db:reset` でスキーマとサンプルデータが投入されますが、**実際の福岡市議会データ（議案・一般質問・予算・記者会見等）は含まれません**。
-> UI やロジックの開発は空データのまま行えますが、実データを使った動作確認が必要な場合はメンテナーにご連絡ください。
-
-### 開発フロー
-
-#### Step 1 — このリポジトリを Fork する
-
-GitHub 右上の「Fork」ボタンで自分のアカウントにコピーを作ります（`your-name/mirai-gikai-adachi`）。Fork 先があなたの作業場所になります。
-
-#### Step 2 — Fork したリポジトリをクローンしてセットアップ
-
-```bash
-git clone https://github.com/<your-name>/mirai-gikai-adachi.git
-cd mirai-gikai-adachi
-cp .env.example .env
-pnpm install
-npx supabase start && pnpm db:reset
-```
-
-#### Step 3 — 作業ブランチを作って実装
-
-```bash
-git checkout -b feature/your-feature-name   # ブランチ名は自由
-# 実装する
-```
-
-#### Step 4 — 品質チェックを通してから push
-
-```bash
-pnpm lint && pnpm typecheck && pnpm test  # 全て通ること
-git push origin feature/your-feature-name
-```
-
-#### Step 5 — PR を作成する
-
-push すると GitHub 上に「Compare & pull request」ボタンが表示されます。
-それを押して、送り先を以下のように設定して PR を作成してください。
-
-| 項目 | 値 |
-|------|-----|
-| base repository | `wakuwakumirailab/mirai-gikai-adachi` |
-| base branch | `adachi/develop` |
-
-> [!TIP]
-> 「Compare & pull request」ボタンを使うと base repository が自動で上記に設定されます。自分の Fork 内で PR を確認してから送ることも可能です。
-
-> PR がマージされると、GitHub の Contributors リストに自動で名前が掲載されます 🎉
+- ローカルの Supabase：API `127.0.0.1:54421`、データベース `127.0.0.1:54432`、管理画面（Studio）http://127.0.0.1:54423
+- 開発用の管理者アカウント（ローカル専用）は `supabase/seed.sql` の冒頭を参照してください。
+- 会議録のデータはリポジトリに含めていません。シードデータだけでは一般質問は表示されません。
 
 ### よく使うコマンド
 
 | コマンド | 内容 |
 |---------|------|
-| `pnpm dev` | web + admin 同時起動 |
-| `pnpm test` | 全テスト実行 |
-| `pnpm lint` | Biome フォーマット + Lint |
-| `pnpm typecheck` | TypeScript 型チェック |
-| `pnpm db:migrate` | マイグレーション実行 + 型ファイル更新 |
-| `pnpm db:types:gen` | Supabase 型定義を再生成 |
+| `pnpm dev` | web と admin を同時に起動 |
+| `pnpm test` | すべてのテストを実行 |
+| `pnpm lint` | Biome による書式と Lint の確認 |
+| `pnpm typecheck` | TypeScript の型チェック |
+| `npx supabase migration new <名前>` | マイグレーションファイルの作成 |
+| `npx supabase migration up` | マイグレーションの適用（ローカル） |
+| `npx supabase@2.116.0 gen types typescript --local > packages/supabase/types/supabase.types.ts` | Supabase の型定義の再生成 |
+
+> [!NOTE]
+> 型定義は Supabase CLI 2.116.0 で生成してください。新しい版で生成すると書式と型が変わり、既存のコードの型チェックが通らなくなります。
+
+### サイトの設定
+
+サイト名・運営者・非公式の表示・問い合わせフォームなどの設定は `web/src/config/site.config.ts` にまとめています。一般質問以外の機能（議案・委員会・予算など）は、同じファイルの `features.showOtherSections` で表示を止めています。
 
 ### プロジェクト構成
 
 ```
 web/src/
-├── app/            # Next.js ルーティング
-├── components/     # 共通UIコンポーネント
-├── features/       # 機能別モジュール（bills / budget / general-questions / press-conferences 等）
-└── lib/            # 共通ユーティリティ
+├── app/            # Next.js のルーティング
+├── components/     # 共通の UI 部品
+├── config/         # サイトの設定
+├── features/       # 機能別のモジュール（general-questions など）
+└── lib/            # 共通のユーティリティ
 
-admin/src/          # データ管理・AI生成等の管理画面
+admin/src/          # データ管理用の管理画面
 
 packages/
 ├── supabase/       # Supabase クライアント・型定義
-└── seed/           # 初期データ投入スクリプト
+└── seed/           # 開発用の初期データ投入スクリプト
 
-supabase/migrations/ # DB マイグレーションファイル
-docs/fukuoka/        # 設計ドキュメント
+supabase/migrations/ # データベースのマイグレーション
+docs/                # 上流（Fork 元）から引き継いだ設計資料
 ```
-
-### 関連ドキュメント
-
-- [CLAUDE.md](CLAUDE.md) — AI（Claude Code）で開発する場合のルール
-
----
-
-# みらい議会
-
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/team-mirai-volunteer/mirai-gikai)
-[![codecov](https://codecov.io/gh/team-mirai/mirai-gikai/branch/develop/graph/badge.svg)](https://codecov.io/gh/team-mirai/mirai-gikai)
-
-## セットアップ
-
-```bash
-# Supabaseの起動
-npx supabase start
-
-# 環境変数の設定（必要に応じて.envの内容を変更してください）
-cp .env.example .env
-
-# パッケージインストール
-pnpm install
-
-# SupabaseのDB初期化, 開発用シードデータのセットアップ
-pnpm db:reset
-
-# サーバー起動
-pnpm dev
-```
-
-## マイグレーション
-
-```bash
-# マイグレーションファイル生成
-npx supabase migration new マイグレーション名
-
-# マイグレーション実行 & 型ファイル更新
-pnpm db:migrate
-```
-
-## Adminユーザーの作成
-
-1. Supabase Studio上で Authentication > Add User からユーザーを作成
-2. Supabase Studio上で以下のSQLを実行
-
-```sql
-UPDATE auth.users
-SET raw_app_meta_data = raw_app_meta_data || '{"roles": ["admin"]}'::jsonb
-WHERE email = '<1で作成したユーザーのemail>';
-```
-
-> [!NOTE]
-> 開発環境では、seedデータによって、`email: admin@example.com, password: admin123456` のAdminユーザーが作成されます。
-
-
-
