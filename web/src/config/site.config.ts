@@ -25,6 +25,14 @@ export const siteConfig = {
   councilBillsDetailUrl: "https://www.city.bunkyo.lg.jp/kugikai/index.html",
   /** 会議録検索システム（掲載内容の原典） */
   councilMinutesUrl: "https://www.city.bunkyo.tokyo.dbsr.jp/",
+  /** 会議録検索システムへのリンクの文字 */
+  councilMinutesLabel: "文京区議会 会議録検索システム",
+  /**
+   * 掲載内容についての注意書き（引き継ぎ書 3-4）。
+   * 全ページ共通のフッターに、公式会議録へのリンクと一緒に表示する。
+   */
+  machineProcessingNotice:
+    "掲載内容はAIなどで機械的に処理したものです。正確な表現は公式の会議録をご確認ください。",
   twitterHashtag: "ぶんきょう議会ナビ", // # なし
   externalLinks: {
     /**

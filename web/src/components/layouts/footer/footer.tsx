@@ -20,6 +20,7 @@ export function Footer() {
         <FooterLogoSection />
         <FooterPrimaryLinks />
         <FooterPolicies />
+        <FooterMinutesNotice />
         <FooterDisclaimer />
         <FooterOperator />
       </div>
@@ -82,6 +83,24 @@ function FooterPolicies() {
         ))}
       </ul>
     </div>
+  );
+}
+
+/** 掲載内容は機械的な処理であることの注意書きと、公式会議録への導線 */
+function FooterMinutesNotice() {
+  return (
+    <p className="text-[12px] text-slate-700 text-center mb-3 leading-relaxed">
+      {siteConfig.machineProcessingNotice}
+      <br />
+      <a
+        href={siteConfig.councilMinutesUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="font-semibold underline underline-offset-2 transition-colors hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+      >
+        {siteConfig.councilMinutesLabel}
+      </a>
+    </p>
   );
 }
 
