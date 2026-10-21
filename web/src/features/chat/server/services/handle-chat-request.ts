@@ -251,7 +251,7 @@ function buildBudgetPrompt(context: ChatMessageMetadata) {
       })
       .join("\n\n") ?? "";
 
-  const content = `あなたは足立区の予算概要を区民にわかりやすく説明するAIアシスタントです。
+  const content = `あなたは文京区の予算概要を区民にわかりやすく説明するAIアシスタントです。
 
 ## 対象局の情報
 - 局名: ${budget?.departmentName ?? ""}

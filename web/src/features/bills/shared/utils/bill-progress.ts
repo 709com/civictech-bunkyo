@@ -1,6 +1,6 @@
 import type { BillStatusEnum } from "../types";
 
-// ステップ番号マッピング（足立区議会: 一院制）
+// ステップ番号マッピング（文京区議会: 一院制）
 const STATUS_TO_STEP: Record<BillStatusEnum, number> = {
   preparing: 0,
   submitted: 1,
@@ -40,7 +40,7 @@ export function getStepState(
 }
 
 /**
- * ステップ一覧をそのまま返す（足立区議会は一院制のため順序変更なし）
+ * ステップ一覧をそのまま返す（文京区議会は一院制のため順序変更なし）
  */
 export function getOrderedSteps(
   baseSteps: readonly { readonly label: string }[]

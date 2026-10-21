@@ -36,7 +36,7 @@ export function ComingSoonSection({ bills }: ComingSoonSectionProps) {
         </div>
       )}
 
-      {/* 足立区議会情報へのリンク */}
+      {/* 議会の公式サイトの議案情報へのリンク */}
       <div className="text-right text-sm text-mirai-text-secondary">
         <Link
           href={siteConfig.councilBillsDetailUrl}

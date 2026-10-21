@@ -9,7 +9,7 @@ export type TranscriptSection = {
 
 /**
  * 発言セグメント一覧を議題の範囲（startVoiceNo〜endVoiceNo は seq を指す）で分割する。
- * 足立区の議事録は通常議題を持たないため、その場合は全体を1セクションにまとめる。
+ * 議題を持たない議事録の場合は、全体を1セクションにまとめる。
  */
 export function buildTranscriptSections(
   speeches: CommitteeSpeech[],
