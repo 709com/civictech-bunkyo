@@ -48,11 +48,6 @@ export const previewRegistry: PreviewGroup[] = [
         label: "概観ビュー（案）",
         description: "テーマタグで絞り込み、全議員の質問を俯瞰",
       },
-      {
-        path: "/dev/features/general-questions/topics-d",
-        label: "テーマ別：市民向けキャッチー型",
-        description: "市の方針を先に・大きく。カテゴリカラー",
-      },
     ],
   },
   {

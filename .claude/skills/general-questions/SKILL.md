@@ -8,12 +8,13 @@ description: 一般質問機能の設計・データ管理・UI決定事項の�
 ## UI設計の決定事項
 
 ### セッション一覧ページ `/sessions/[session_slug]/questions`
-**テーマ別市民向けビュー**を採用（2026-05-01 確定）。
+**登壇順の一覧**を採用（2026-10-19 文京版で変更。テーマ別ビューは廃止）。
 
-- `SessionTopicsView` コンポーネント（Server Component）
-- `buildTopicGroups()` でトピックを9カテゴリに自動分類
-- 市の答弁を先に・大きく表示（課題より結果を前面に）
-- 「質疑の詳細→」で個人ページへ遷移
+- `SessionQuestionList` コンポーネント（Server Component）
+- 並べ方は `shared/utils/speaking-order.ts`：定例会の中は日付順 → その日の登壇順（`meeting_date`・`session_day`・`question_order`）
+- テーマなどでまとめ直さない（掲載順は登壇順で固定。`ListOrderNotice` で「掲載順・表示順は支持や評価を示すものではありません」を表示）
+- ページの下に `SessionSwitcher`（一般質問のある定例会の一覧、新しい順）
+- 各カードから個人ページへ遷移
 
 ### 個人詳細ページ `/questions/[id]`
 **要約／原文の切り替えトグル**を採用（2026-05-08 確定）。
@@ -24,25 +25,9 @@ description: 一般質問機能の設計・データ管理・UI決定事項の�
 - どちらか一方のみの場合は従来通り単体表示
 - トピックタイトルの挿入位置はターン数をトピック数で等分した比例配置（近似）
 
-## カテゴリ分類（9カテゴリ）
+## カテゴリ分類（廃止）
 
-| カテゴリ | アイコン | カラー | 代表キーワード |
-|---|---|---|---|
-| 子育て・教育 | Baby | sky | 保育, 学校, 教育, 不登校, 教員, いじめ, 通級 |
-| 健康・医療 | Stethoscope | teal | ワクチン, コロナ, 健康, HPV, がん, 検診, 難聴, 補聴器 |
-| 防災・安全 | Shield | orange | 防災, 耐震, 火災, 発令, 警報, 危機管理 |
-| 高齢者・福祉 | Heart | rose | 高齢者, 介護, 老人, 孤立, 成年後見 |
-| 交通・まちづくり | Building2 | violet | 交通, 道路, まちづくり, 再開発, 回遊, 歩行者 |
-| 環境・脱炭素 | Leaf | emerald | 環境, 太陽光, 温室効果, ごみ |
-| スポーツ・文化 | Trophy | indigo | スポーツ, 博物館, 公民館, スタジアム, 動植物園, 美術館 |
-| 地域・国際交流 | Globe | amber | 地域, 農業, 観光, 外国人, 動物, 人権, 差別 |
-| 行財政・経済 | Landmark | slate | 予算, 財政, 行財政, 市債, DX, 副首都, 中小企業, 雇用, スタートアップ |
-
-> 「行財政・経済」は予算・財政・DX・市債・経済産業・雇用など、従来「その他」に落ちていた市政運営・経済系トピックの受け皿として 2026-06 に追加（`CATEGORY_MAP` の**末尾**に配置し、既存カテゴリの判定を奪わない設計）。
-
-キーワード追加が必要な場合は `build-topic-groups.ts` の `CATEGORY_MAP` を編集する。新カテゴリを追加する場合は `session-topics-view.tsx` の `ICON_MAP`（lucide アイコンの import 含む）と `CATEGORY_STYLE`（カラー）も併せて更新する。
-
-> ⚠️ **CATEGORY_MAP を変更する際の注意**: キーワードの追加・削除は既存の全トピックの分類に影響する。変更後は **全議員の全トピックが意図したカテゴリに分類されているか** 必ず確認すること。特にキーワードを削除する場合、そのキーワードに依存していた既存トピックが「その他」に落ちる可能性がある。変更前後で `buildTopicGroups(全データ)` の結果を比較するか、テーマ別ビューを目視確認すること。
+キーワード表（`CATEGORY_MAP`）によるテーマ分け（`build-topic-groups.ts`）は、文京版では取り除いた（2026-10-19 公開サイト、2026-10-21 開発用ページ）。一覧は登壇順で並べ、テーマでまとめ直さない。
 
 ## 関連ファイル
 
@@ -51,16 +36,19 @@ web/src/features/general-questions/
 ├── shared/
 │   ├── types/index.ts                          # GeneralQuestion 型定義
 │   └── utils/
-│       ├── build-topic-groups.ts               # カテゴリ分類ロジック（純粋関数）
-│       └── build-topic-groups.test.ts          # テスト
+│       ├── speaking-order.ts                   # 登壇順の並べ方・日ごとのまとめ（純粋関数）
+│       └── speaking-order.test.ts              # テスト
 ├── server/
 │   ├── repositories/general-questions-repository.ts
 │   ├── loaders/
 │   │   ├── get-general-questions-by-session.ts
 │   │   ├── get-general-question-by-id.ts
+│   │   ├── get-sessions-with-questions.ts      # 一般質問のある定例会の一覧
 │   │   └── get-latest-session-with-questions.ts  # トップページバナー用
 │   └── components/
-│       ├── session-topics-view.tsx             # テーマ別一覧（採用デザイン）
+│       ├── session-question-list.tsx           # 登壇順の一覧（採用デザイン）
+│       ├── session-switcher.tsx                # 定例会の切り替え（新しい順）
+│       ├── list-order-notice.tsx               # 掲載順の注意書き
 │       ├── raw-transcript-view.tsx             # 原文表示（raw_textのみの場合）
 │       └── general-question-list.tsx           # 旧リスト（未使用）
 └── client/
@@ -106,11 +94,8 @@ curl -s -X PATCH "$SUPABASE_URL/rest/v1/general_questions?council_session_id=eq.
 - **AI生成で追加した要約語は平易に**: あくまで会議録に存在しないAI生成の補足語・タイトル補完部分を平易にする
 - **複合専門語の連続**: タイトルが著しく長くて難解な場合は、原文の語を保ちつつ短くすることを検討する
 
-### タイトルとカテゴリ分類の整合（重要）
-`build-topic-groups.ts` の `CATEGORY_MAP` はタイトルのキーワードで分類先を判定する。**タイトルにカテゴリキーワードが含まれないと「その他」に落ちる**。
-
-- 例: 防災系の話題でも「プッシュ型情報発信の強化」というタイトルだと「その他」になる
-- → 「**火災警報**のプッシュ型情報発信強化」のようにカテゴリキーワードを含めること
+### タイトルとカテゴリ分類
+キーワードによるカテゴリ分類は廃止した（上の「カテゴリ分類（廃止）」）。分類のためにタイトルへキーワードを足す必要はない。
 
 ### Qサマリーの文体
 - NG: 「〜を**質した**」「〜を**問いただした**」（議会報告調・対立的ニュアンス）
@@ -135,6 +120,5 @@ curl -s -X PATCH "$SUPABASE_URL/rest/v1/general_questions?council_session_id=eq.
 ## 今後の課題（設計書参照）
 
 - Admin UIによる publish_status 管理（設計書: `docs/fukuoka/20260428_1100_一般質問管理画面設計書.md`）
-- カテゴリ分類の精度向上（AI分類への移行検討）
 
 ※ 新定例会データのインポートフローは `update-general-questions` スキルに整備済み。
