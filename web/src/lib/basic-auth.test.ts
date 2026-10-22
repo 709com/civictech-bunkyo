@@ -83,6 +83,44 @@ describe("validateBasicAuthHeader", () => {
   it("should return false for empty string", () => {
     expect(validateBasicAuthHeader("", config)).toBe(false);
   });
+
+  it("パスワードの前半だけ・後ろに足したものでは入れない", () => {
+    expect(
+      validateBasicAuthHeader(`Basic ${btoa("admin:secre")}`, config)
+    ).toBe(false);
+    expect(
+      validateBasicAuthHeader(`Basic ${btoa("admin:secrets")}`, config)
+    ).toBe(false);
+    expect(validateBasicAuthHeader(`Basic ${btoa("admin:")}`, config)).toBe(
+      false
+    );
+  });
+
+  it("「:」が無い（パスワードが無い）ときは、設定のパスワードが空でも入れない", () => {
+    const emptyPasswordConfig: BasicAuthConfig = {
+      username: "admin",
+      password: "",
+    };
+    expect(
+      validateBasicAuthHeader(`Basic ${btoa("admin")}`, emptyPasswordConfig)
+    ).toBe(false);
+  });
+
+  it("日本語など英数字以外のパスワードは、正しく打っても一致しない（閉じる側）", () => {
+    // ブラウザは UTF-8 で送る。atob は1バイトを1文字にするので、設定の文字列と一致しない。
+    const utf8Base64 = (value: string) =>
+      btoa(String.fromCharCode(...new TextEncoder().encode(value)));
+    const japaneseConfig: BasicAuthConfig = {
+      username: "bunkyo",
+      password: "ぶんきょう",
+    };
+    expect(
+      validateBasicAuthHeader(
+        `Basic ${utf8Base64("bunkyo:ぶんきょう")}`,
+        japaneseConfig
+      )
+    ).toBe(false);
+  });
 });
 
 describe("getBasicAuthPolicy", () => {

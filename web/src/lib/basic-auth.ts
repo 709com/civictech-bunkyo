@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { constantTimeStringEqual } from "./security/constant-time-equal";
 import { isPublicRelease } from "./site-release";
 
 export interface BasicAuthConfig {
@@ -150,9 +151,21 @@ export function validateBasicAuthHeader(
     return false;
   }
 
+  // 時間が一定になる比べ方で、ユーザー名とパスワードの両方を必ず最後まで比べる
+  // （片方が違っても途中で止めない）。
+  // 注意：atob は1バイトを1文字にするので、英数字以外（日本語など）のパスワードは
+  // 設定と一致することがない（だれも入れない＝閉じる側）。パスワードは英数字にする。
+  const usernameMatches = constantTimeStringEqual(
+    credentials.username,
+    config.username
+  );
+  const passwordMatches = constantTimeStringEqual(
+    credentials.password ?? "",
+    config.password
+  );
+
   return (
-    credentials.username === config.username &&
-    credentials.password === config.password
+    usernameMatches && passwordMatches && credentials.password !== undefined
   );
 }
 
