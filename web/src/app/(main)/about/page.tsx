@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { OperatorContactSection } from "@/components/about/operator-contact-section";
 import { ContactFormLink } from "@/components/contact/contact-form-link";
 import {
   LegalPageLayout,
@@ -11,13 +12,6 @@ export const metadata: Metadata = {
   title: `このサイトについて | ${siteConfig.siteName}`,
   description: `${siteConfig.siteName}の運営者と、運営についての情報です。`,
 };
-
-/** 会派の連絡先のうち、値が入っているものだけを表示する（空欄は出さない） */
-const operatorContacts = [
-  { label: "所在地", value: siteConfig.operator.contact.address },
-  { label: "電話", value: siteConfig.operator.contact.phone },
-  { label: "メール", value: siteConfig.operator.contact.email },
-].filter((item) => item.value !== "");
 
 /**
  * 運営者情報ページ（設計書 付録B の文面。2026-10-21 の方針転換で、会派・政務活動費による運営に書き換え）。
@@ -45,16 +39,12 @@ export default function AboutPage() {
             で運営しています。選挙に係る費用には使用しません。
           </dd>
         </div>
-        {operatorContacts.map((item) => (
-          <div
-            key={item.label}
-            className="flex flex-col gap-1 sm:flex-row sm:gap-3"
-          >
-            <dt className="shrink-0 font-bold text-slate-900">{item.label}</dt>
-            <dd className="break-all">{item.value}</dd>
-          </div>
-        ))}
       </dl>
+
+      <OperatorContactSection
+        operatorName={siteConfig.operator.name}
+        contact={siteConfig.operator.contact}
+      />
 
       <LegalParagraph>
         本サイトは、{siteConfig.operator.name}
