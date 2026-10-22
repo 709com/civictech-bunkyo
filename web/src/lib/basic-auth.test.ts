@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   type BasicAuthConfig,
-  isPageSpeedInsightsUA,
+  getBasicAuthPolicy,
+  isAuthExemptPath,
   parseBasicAuth,
   validateBasicAuthHeader,
 } from "./basic-auth";
@@ -12,9 +13,9 @@ describe("parseBasicAuth", () => {
     expect(result).toEqual({ username: "admin", password: "password123" });
   });
 
-  it("parses credentials with colon in password", () => {
+  it("keeps colons in the password (splits only at the first colon)", () => {
     const result = parseBasicAuth("Basic dXNlcjpwYXNzOndvcmQ=");
-    expect(result).toEqual({ username: "user", password: "pass" });
+    expect(result).toEqual({ username: "user", password: "pass:word" });
   });
 
   it("returns null when auth value after 'Basic ' is missing", () => {
@@ -45,30 +46,6 @@ describe("parseBasicAuth", () => {
   });
 });
 
-describe("isPageSpeedInsightsUA", () => {
-  it("should return true for Chrome-Lighthouse UA", () => {
-    expect(isPageSpeedInsightsUA("Mozilla/5.0 Chrome-Lighthouse")).toBe(true);
-  });
-
-  it("should return true for PageSpeed Insights UA", () => {
-    expect(isPageSpeedInsightsUA("Mozilla/5.0 PageSpeed Insights")).toBe(true);
-  });
-
-  it("should return true for Google Page Speed Insights UA", () => {
-    expect(isPageSpeedInsightsUA("Google Page Speed Insights")).toBe(true);
-  });
-
-  it("should return false for normal browser UA", () => {
-    expect(
-      isPageSpeedInsightsUA("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)")
-    ).toBe(false);
-  });
-
-  it("should return false for empty string", () => {
-    expect(isPageSpeedInsightsUA("")).toBe(false);
-  });
-});
-
 describe("validateBasicAuthHeader", () => {
   const config: BasicAuthConfig = {
     username: "admin",
@@ -90,6 +67,11 @@ describe("validateBasicAuthHeader", () => {
     expect(validateBasicAuthHeader(`Basic ${encoded}`, config)).toBe(false);
   });
 
+  it("should return false when extra text follows the password", () => {
+    const encoded = btoa("admin:secret:extra");
+    expect(validateBasicAuthHeader(`Basic ${encoded}`, config)).toBe(false);
+  });
+
   it("should return false for null header", () => {
     expect(validateBasicAuthHeader(null, config)).toBe(false);
   });
@@ -100,5 +82,105 @@ describe("validateBasicAuthHeader", () => {
 
   it("should return false for empty string", () => {
     expect(validateBasicAuthHeader("", config)).toBe(false);
+  });
+});
+
+describe("getBasicAuthPolicy", () => {
+  const credentials = { BASIC_AUTH_USER: "u", BASIC_AUTH_PASSWORD: "p" };
+
+  it("本公開（SITE_PUBLIC_RELEASE=true）ならパスワードをかけない", () => {
+    expect(
+      getBasicAuthPolicy({
+        ...credentials,
+        SITE_PUBLIC_RELEASE: "true",
+        NODE_ENV: "production",
+      })
+    ).toEqual({ required: false });
+  });
+
+  it("プレビューでユーザー名とパスワードがあれば、その組でかける", () => {
+    expect(
+      getBasicAuthPolicy({ ...credentials, NODE_ENV: "production" })
+    ).toEqual({ required: true, config: { username: "u", password: "p" } });
+  });
+
+  it("開発中でもユーザー名とパスワードがあればかける", () => {
+    expect(
+      getBasicAuthPolicy({ ...credentials, NODE_ENV: "development" })
+    ).toEqual({ required: true, config: { username: "u", password: "p" } });
+  });
+
+  it("本番の動きでパスワードの設定が無ければ、だれも入れない", () => {
+    expect(getBasicAuthPolicy({ NODE_ENV: "production" })).toEqual({
+      required: true,
+      config: null,
+    });
+  });
+
+  it("NODE_ENV が無いときも閉じる側に倒す", () => {
+    expect(getBasicAuthPolicy({})).toEqual({ required: true, config: null });
+  });
+
+  it("片方だけの設定は、設定が無いのと同じ（本番なら閉じる）", () => {
+    expect(
+      getBasicAuthPolicy({ BASIC_AUTH_USER: "u", NODE_ENV: "production" })
+    ).toEqual({ required: true, config: null });
+  });
+
+  it("開発中でパスワードの設定が無ければかけない", () => {
+    expect(getBasicAuthPolicy({ NODE_ENV: "development" })).toEqual({
+      required: false,
+    });
+  });
+
+  it("SITE_PUBLIC_RELEASE は true 以外の値では本公開にならない", () => {
+    for (const value of ["1", "TRUE", "yes", ""]) {
+      expect(
+        getBasicAuthPolicy({
+          SITE_PUBLIC_RELEASE: value,
+          NODE_ENV: "production",
+        })
+      ).toEqual({ required: true, config: null });
+    }
+  });
+});
+
+describe("isAuthExemptPath", () => {
+  it.each([
+    "/_next/static/chunks/main.js",
+    "/_next/static/chunks/app/(main)/questions/%5Bid%5D/page-abc.js",
+    "/_next/static/media/font.woff2",
+    "/icons/pwa/icon_bunkyo_192.png",
+    "/img/ogp.png",
+    "/images/readingbook_woman_green.png",
+    "/illustrations/interview-complete.svg",
+    "/robots.txt",
+    "/favicon.ico",
+    "/manifest.json",
+  ])("データを含まない静的ファイル %s は通す", (path) => {
+    expect(isAuthExemptPath(path)).toBe(true);
+  });
+
+  it.each([
+    "/",
+    "/questions",
+    "/questions/abc",
+    "/sessions/r8-1/questions",
+    "/about",
+    "/api/revalidate",
+    "/api/chat",
+    "/sitemap.xml",
+    "/_next/image",
+    "/_next/data/build/index.json",
+    "/_next/static",
+    "/img",
+    "/robots.txt/x",
+    "/manifest.json.bak",
+    "/_next/static/../questions",
+    "/_next/static/%2e%2e/questions",
+    "/img/..%2Fquestions",
+    "/icons/%5c..%5cquestions",
+  ])("それ以外の %s はパスワードの内側", (path) => {
+    expect(isAuthExemptPath(path)).toBe(false);
   });
 });

@@ -9,13 +9,22 @@ import {
 } from "./features/bill-difficulty/shared/types";
 import {
   createUnauthorizedResponse,
-  getBasicAuthConfig,
-  isPageSpeedInsights,
+  getBasicAuthPolicy,
+  isAuthExemptPath,
   validateBasicAuth,
 } from "./lib/basic-auth";
 
 export function middleware(request: NextRequest) {
-  // /dev routes: 本番では404、開発ではauthスキップ
+  // パスワード（Basic認証）は、ほかのどの処理よりも先に確かめる。
+  // ページ本体だけでなく、画面切り替えの裏側の通信（RSC）、サーバーアクション、
+  // /api、画像の変換（/_next/image）、sitemap など、すべての読み込みが対象。
+  // 例外は、データを含まない静的ファイル（isAuthExemptPath の許可リスト）だけ。
+  const denied = _denyIfUnauthorized(request);
+  if (denied) {
+    return denied;
+  }
+
+  // /dev routes: 本番では404、開発では開く
   if (request.nextUrl.pathname.startsWith("/dev")) {
     if (process.env.NODE_ENV !== "development") {
       return NextResponse.rewrite(new URL("/not-found", request.url));
@@ -32,26 +41,25 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(new URL("/not-found", request.url));
   }
 
-  const response = _handleDifficultyCookie(request);
+  return _handleDifficultyCookie(request);
+}
 
-  const authConfig = getBasicAuthConfig();
-
-  // Basic認証の設定がない場合はスキップ
-  if (!authConfig) {
-    return response;
+/**
+ * パスワードが要るのに正しく送られていなければ、401 を返す。
+ * 通してよいときは null を返す。
+ */
+function _denyIfUnauthorized(request: NextRequest): Response | null {
+  const policy = getBasicAuthPolicy();
+  if (!policy.required) {
+    return null;
   }
 
-  // HTML ナビゲーションだけ認証（画像やJSON, css/js, fetch等は通す）
-  if (!_isHtmlRequest(request)) return response;
-
-  // PageSpeed Insightsからのアクセスは認証をスキップ
-  if (isPageSpeedInsights(request)) {
-    return response;
+  if (isAuthExemptPath(request.nextUrl.pathname)) {
+    return null;
   }
 
-  // Basic認証の検証
-  if (validateBasicAuth(request, authConfig)) {
-    return response;
+  if (policy.config && validateBasicAuth(request, policy.config)) {
+    return null;
   }
 
   return createUnauthorizedResponse();
@@ -86,13 +94,4 @@ function _handleDifficultyCookie(request: NextRequest): NextResponse {
   }
 
   return response;
-}
-
-export function isHtmlAcceptHeader(accept: string): boolean {
-  return accept.includes("text/html");
-}
-
-function _isHtmlRequest(request: NextRequest) {
-  const accept = request.headers.get("accept") || "";
-  return isHtmlAcceptHeader(accept);
 }
