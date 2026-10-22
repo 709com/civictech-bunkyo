@@ -22,7 +22,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <p className="text-xs text-muted-foreground">
-              © {siteConfig.siteName}（運営：高浜直樹・私費による非公式運営）
+              © {siteConfig.siteName}（運営：会派「ぶんきょう子育て.ネット」）
             </p>
           </div>
         </CardContent>
