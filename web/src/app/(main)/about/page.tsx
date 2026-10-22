@@ -12,8 +12,15 @@ export const metadata: Metadata = {
   description: `${siteConfig.siteName}の運営者と、運営についての情報です。`,
 };
 
+/** 会派の連絡先のうち、値が入っているものだけを表示する（空欄は出さない） */
+const operatorContacts = [
+  { label: "所在地", value: siteConfig.operator.contact.address },
+  { label: "電話", value: siteConfig.operator.contact.phone },
+  { label: "メール", value: siteConfig.operator.contact.email },
+].filter((item) => item.value !== "");
+
 /**
- * 運営者情報ページ（設計書 付録B の文面）。
+ * 運営者情報ページ（設計書 付録B の文面。2026-10-21 の方針転換で、会派・政務活動費による運営に書き換え）。
  * トップページには運営者の名前・写真を出さず、このページで明記する（設計書 9-2）。
  */
 export default function AboutPage() {
@@ -27,27 +34,40 @@ export default function AboutPage() {
         <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
           <dt className="shrink-0 font-bold text-slate-900">運営</dt>
           <dd>
-            {siteConfig.operator.name}
-            （文京区議会議員・ぶんきょう子育て.ネット）
+            {siteConfig.councilName}の{siteConfig.operator.name}（代表{" "}
+            {siteConfig.operator.representative}）
           </dd>
         </div>
         <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
           <dt className="shrink-0 font-bold text-slate-900">費用</dt>
           <dd>
-            サーバー・ドメイン等の公開にかかる費用は運営者の私費で負担しています。
+            {siteConfig.operator.funding}
+            で運営しています。選挙に係る費用には使用しません。
           </dd>
         </div>
+        {operatorContacts.map((item) => (
+          <div
+            key={item.label}
+            className="flex flex-col gap-1 sm:flex-row sm:gap-3"
+          >
+            <dt className="shrink-0 font-bold text-slate-900">{item.label}</dt>
+            <dd className="break-all">{item.value}</dd>
+          </div>
+        ))}
       </dl>
 
       <LegalParagraph>
-        本サイトは、{siteConfig.cityName}、{siteConfig.councilName}
-        、および政党チームみらいのいずれとも関係のない、個人による非公式の取り組みです。掲載内容について区や区議会事務局へお問い合わせいただいてもお答えできません。お問い合わせは本サイトの
+        本サイトは、{siteConfig.operator.name}
+        の議会報告サイトです。{siteConfig.cityName}・{siteConfig.councilName}
+        の公式サービスではなく、政党チームみらいとも関係ありません。掲載内容の責任は、
+        {siteConfig.operator.name}（代表 {siteConfig.operator.representative}
+        ）にあります。掲載内容について区や区議会事務局へお問い合わせいただいてもお答えできません。お問い合わせは本サイトの
         <ContactFormLink>窓口</ContactFormLink>
         までお願いします。
       </LegalParagraph>
 
       <LegalParagraph>
-        掲載データは、区議会の公式会議録および区公表の速報版に基づき、機械的に処理したものです。正確な表現・意図は必ず
+        掲載データは、区議会の公式会議録および区公表の速報版に基づき、AIなどで機械的に処理したものです。正確な表現・意図は必ず
         <Link
           href={siteConfig.councilMinutesUrl}
           target="_blank"

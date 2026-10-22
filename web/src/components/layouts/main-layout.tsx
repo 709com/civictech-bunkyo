@@ -14,7 +14,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
   const useSidebarLayout = isMainPage(pathname) && siteConfig.features.aiChat;
   const isInterview = isInterviewSection(pathname);
-  // 固定ヘッダー分の余白が無いと、ヘッダー直下の「非公式の表示帯」や
+  // 固定ヘッダー分の余白が無いと、ヘッダー直下の「公式サービスではないことの表示帯」や
   // 見出し・本文が隠れてしまうため、TOPページを含む全ページで mt-24 を適用する。
 
   return (

@@ -104,7 +104,9 @@ export default function PrivacyPage() {
           </LegalParagraph>
           <LegalParagraph>お問い合わせ窓口</LegalParagraph>
           <LegalParagraph>
-            {siteConfig.operator.name}（運営者） 個人情報保護管理責任者
+            {siteConfig.operator.name}（運営者）
+            <br />
+            個人情報保護管理責任者：代表 {siteConfig.operator.representative}
           </LegalParagraph>
           <LegalParagraph>
             <ContactFormLink />

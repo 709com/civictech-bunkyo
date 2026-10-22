@@ -1,7 +1,7 @@
 import { siteConfig } from "@/config/site.config";
 
 /**
- * 非公式であることの表示帯（設計書 9-1）。
+ * 公式サービスではないこと・運営者・費用の表示帯（設計書 9-1）。
  * 全ページのヘッダー直下に常に表示する（フッターにも同じ文言を表示している）。
  */
 export function DisclaimerBand() {

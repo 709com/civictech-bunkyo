@@ -115,7 +115,7 @@ function FooterDisclaimer() {
 function FooterOperator() {
   return (
     <p className="text-[12px] font-medium text-slate-700 text-center mb-2">
-      運営：{siteConfig.operator.name}
+      運営：{siteConfig.councilName}の{siteConfig.operator.name}
     </p>
   );
 }

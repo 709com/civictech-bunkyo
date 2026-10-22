@@ -1,7 +1,7 @@
 {
   "name": "ぶんきょう議会ナビ",
   "short_name": "ぶんきょう議会ナビ",
-  "description": "文京区議会の本会議一般質問を検索できる非公式サイトです",
+  "description": "文京区議会の本会議一般質問を検索できる議会報告サイトです",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F7F4F0",

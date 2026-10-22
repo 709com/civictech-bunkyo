@@ -42,8 +42,18 @@ describe("Footer", () => {
     expect(link).toHaveAttribute("target", "_blank");
   });
 
-  it("非公式の表示も残っている", () => {
+  it("公式サービスではないことの表示も残っている", () => {
     render(<Footer />);
     expect(screen.getByText(siteConfig.disclaimer)).toBeInTheDocument();
+  });
+
+  it("運営者は会派で、政務活動費で運営していると表示する", () => {
+    render(<Footer />);
+    expect(siteConfig.disclaimer).toContain("ぶんきょう子育て.ネット");
+    expect(siteConfig.disclaimer).toContain("政務活動費（広報費）");
+    expect(siteConfig.disclaimer).not.toContain("私費");
+    expect(
+      screen.getByText("運営：文京区議会の会派「ぶんきょう子育て.ネット」")
+    ).toBeInTheDocument();
   });
 });
