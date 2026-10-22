@@ -1,7 +1,6 @@
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { ReactNode } from "react";
 import { Header } from "@/components/header";
-import { AuthGate } from "@/components/layouts/auth-gate";
 import { DisclaimerBand } from "@/components/layouts/disclaimer-band";
 import { ElectionBlackoutBanner } from "@/components/layouts/election-blackout-banner";
 import { Footer } from "@/components/layouts/footer/footer";
@@ -19,7 +18,6 @@ export default function MainGroupLayout({
       <SpeedInsights />
       <TextSizeInitializer />
       <RubyfulInitializer />
-      <AuthGate />
 
       {/* スキップリンク: キーボード操作時のみ表示し、ヘッダーを読み飛ばせるようにする */}
       <a
