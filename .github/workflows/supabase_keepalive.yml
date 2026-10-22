@@ -1,0 +1,44 @@
+# 公開用データベース（Supabase の無料枠）が、1週間アクセスが無いと一時停止するのを防ぐ。
+# 1日1回、データの中身を取らない軽い読み取りを1回だけ行う。
+#
+# 接続先は GitHub の Secrets から読む（公開手順書を参照）:
+#   SUPABASE_URL       … https://xxxx.supabase.co
+#   SUPABASE_ANON_KEY  … anon（public）の鍵
+# どちらかが空のあいだは、何もせずに成功で終わる。
+name: Supabase Keepalive
+
+on:
+  schedule:
+    # 毎日 21:17（協定世界時）＝ 日本時間の朝 6:17
+    - cron: "17 21 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "接続先（SUPABASE_URL / SUPABASE_ANON_KEY）が未登録のため、何もしません。"
+            exit 0
+          fi
+          # 会期の表から id を1つだけ読む（anon は行の読み取り権限が無いので、空の [] が返る）。
+          # データベースに1回問い合わせることが目的で、中身は受け取らない。
+          status=$(curl --silent --show-error --output /dev/null --write-out "%{http_code}" \
+            --retry 3 --retry-delay 10 --max-time 30 \
+            "${SUPABASE_URL%/}/rest/v1/council_sessions?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          echo "応答: HTTP ${status}"
+          if [ "$status" != "200" ]; then
+            echo "公開用データベースから正常な応答がありません。Supabase のダッシュボードで状態を確かめてください。"
+            exit 1
+          fi
