@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
 import { RawTranscriptView } from "@/features/general-questions/server/components/raw-transcript-view";
+import { SourceTypeBadge } from "@/features/general-questions/server/components/source-type-badge";
 import { QuestionChatView } from "@/features/general-questions/client/components/question-chat-view";
 import { QuestionViewToggle } from "@/features/general-questions/client/components/question-view-toggle";
 import { getGeneralQuestionById } from "@/features/general-questions/server/loaders/get-general-question-by-id";
@@ -82,6 +83,8 @@ export default async function GeneralQuestionDetailPage({ params }: Props) {
           )}
           {dayLabel}
         </p>
+        {/* 速報版のものにだけ出す。切り替え（features.showSourceTypeBadge）が false のあいだは何も出ない */}
+        <SourceTypeBadge sourceType={question.source_type} withNote />
       </div>
 
       {question.summary && (

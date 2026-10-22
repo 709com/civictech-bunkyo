@@ -8,7 +8,7 @@ import { sortSessionsNewestFirst } from "../../shared/utils/speaking-order";
  * review_status など内部管理用の列は、公開側には持ち出さない。
  */
 const GENERAL_QUESTION_COLUMNS =
-  "id, council_session_id, questioner_name, questioner_party, questioner_number, session_day, question_order, meeting_date, summary, topics, raw_text, source_url, publish_status, created_at, updated_at";
+  "id, council_session_id, questioner_name, questioner_party, questioner_number, session_day, question_order, meeting_date, summary, topics, raw_text, source_url, source_type, publish_status, created_at, updated_at";
 
 export async function findPublishedGeneralQuestionsBySession(
   sessionId: string

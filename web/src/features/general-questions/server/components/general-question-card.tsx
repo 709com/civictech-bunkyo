@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { GeneralQuestion } from "../../shared/types";
+import { SourceTypeBadge } from "./source-type-badge";
 
 interface GeneralQuestionCardProps {
   question: GeneralQuestion;
@@ -32,8 +33,9 @@ export function GeneralQuestionCard({ question }: GeneralQuestionCardProps) {
               {topicTitles}
             </p>
           )}
-          <p className="font-bold text-mirai-text">
+          <p className="flex flex-wrap items-center gap-2 font-bold text-mirai-text">
             {question.questioner_name}
+            <SourceTypeBadge sourceType={question.source_type} />
           </p>
           {question.questioner_party && (
             <p className="text-sm text-mirai-text-secondary">

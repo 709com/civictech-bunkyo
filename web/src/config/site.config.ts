@@ -109,5 +109,12 @@ export const siteConfig = {
      * 対象のページは web/src/lib/other-sections.ts にまとめてある。
      */
     showOtherSections: false as boolean,
+    /**
+     * 速報版の会議録に基づく一般質問に「速報」の印を付けるか（2026-10-22 先生：今は付けない）。
+     * true にすると、一覧のカードと各質問のページで、source_type が sokuhou（速報版）のものにだけ印が出る。
+     * false のあいだは、画面にも HTML にも何も出ない。
+     * 部品は web/src/features/general-questions/server/components/source-type-badge.tsx。
+     */
+    showSourceTypeBadge: false as boolean,
   },
 } as const;

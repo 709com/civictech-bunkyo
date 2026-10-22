@@ -14,7 +14,8 @@ const _getCached = unstable_cache(
   async (id: string): Promise<GeneralQuestion | null> => {
     return findPublishedGeneralQuestionById(id);
   },
-  ["general-question-by-id"],
+  // 取り出す列に source_type を足したため、古い形のキャッシュを使わないよう v2 にする
+  ["general-question-by-id-v2"],
   {
     revalidate: 600,
     tags: [CACHE_TAGS.GENERAL_QUESTIONS],
