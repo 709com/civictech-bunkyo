@@ -24,6 +24,11 @@ ingest_minutes.py が作った data/out.json（本会議の一般質問）を読
       py -3 load_minutes.py
   3. 作って、ローカルのデータベースに流し込む:
       py -3 load_minutes.py --apply
+  4. 作って、公開用のデータベース（Supabase のクラウド）に流し込む:
+      py -3 load_minutes.py --apply --target production
+     接続先は .env.production の SUPABASE_DB_URL から読む（値は画面に出さない）。
+     流し込む前に、接続先のホスト名を表示し、そのホスト名を打ち込んで確かめる。
+     （打ち込めない黒い画面では --confirm-host <ホスト名> で同じ確認をする）
 
 【安全のための決まり】
   ・全部まとめて1回の処理（トランザクション）で入れる。途中で1つでも失敗したら、
@@ -33,6 +38,10 @@ ingest_minutes.py が作った data/out.json（本会議の一般質問）を読
     見つからない表記は、新しい議員を作らず「未確認」のまま入れる。
   ・会派は、会派の履歴（member_faction_history）に発言日の期間があればそれを使い、
     無ければ本人の名乗りをそのまま使う。
+  ・何も指定しなければ、入れる先はいつもローカル（このパソコンの Docker の中）。
+    公開用に入れるのは --target production をはっきり付けたときだけ。
+    そのときも、ホスト名の確認が合わなければ、つながずに止まる。
+    公開用の接続先がローカル（127.0.0.1 など）を指していたら、取り違えとして止まる。
   ・選挙期間中（web/src/config/site.config.ts の electionBlackout の期間）は、
     --apply を付けてもデータベースに入れない（データ更新の休止。設計書 9-6）。
   ・命令書（data/load_minutes.sql）には会議録の本文が入るので、GitHubには上げない
@@ -41,16 +50,22 @@ ingest_minutes.py が作った data/out.json（本会議の一般質問）を読
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_IN = ROOT / "data" / "out.json"
 DEFAULT_SQL = ROOT / "data" / "load_minutes.sql"
+DEFAULT_ENV_FILE = ROOT / ".env.production"
+DB_URL_KEY = "SUPABASE_DB_URL"
+# 公開用の接続先として、取り違えとみなすホスト（ローカルのデータベース）
+LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1", "0.0.0.0", "host.docker.internal"}
 
 # IDを毎回同じ値にするための「種」。同じ会議録からは、何度作っても同じIDになる。
 ID_NAMESPACE = uuid.UUID("6f0e1c7a-5b0d-4f6e-9a57-b0c7b1f2d3e4")
@@ -289,6 +304,72 @@ def db_container() -> str:
     return f"supabase_db_{m.group(1)}"
 
 
+def read_env_value(env_file: Path, key: str) -> str:
+    """KEY=VALUE の形のファイルから、1つの値だけを読む。値は画面に出さない。"""
+    if not env_file.is_file():
+        sys.exit(f"{env_file} が見つかりません。公開手順書の STEP 3 で作ってください。")
+    for line in env_file.read_text(encoding="utf-8-sig").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = line.split("=", 1)
+        if name.strip().removeprefix("export ").strip() != key:
+            continue
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+            value = value[1:-1]
+        return value
+    return ""
+
+
+def production_target(env_file: Path) -> tuple[str, str]:
+    """公開用の接続先（接続文字列, ホスト名）。接続文字列は画面に出さない。"""
+    url = read_env_value(env_file, DB_URL_KEY)
+    if not url:
+        sys.exit(f"{env_file} に {DB_URL_KEY} が書かれていません。公開手順書の STEP 3 を確かめてください。")
+    if not url.startswith(("postgresql://", "postgres://")):
+        sys.exit(f"{DB_URL_KEY} が postgresql:// で始まっていません。公開手順書の STEP 3 を確かめてください。")
+    try:
+        host = urlsplit(url).hostname or ""
+    except ValueError:
+        host = ""
+    if not host:
+        sys.exit(f"{DB_URL_KEY} からホスト名を読み取れません。公開手順書の STEP 3 を確かめてください。")
+    if host.lower() in LOCAL_HOSTS:
+        sys.exit(f"公開用の接続先がローカル（{host}）を指しています。取り違えのおそれがあるので止めます。")
+    return url, host
+
+
+def confirm_production(host: str, confirm_host: str | None) -> None:
+    """公開用に流し込む前の確認。ホスト名が合わなければ止める。"""
+    print("\n" + "=" * 60)
+    print("  公開用のデータベースに流し込もうとしています。")
+    print(f"  接続先のホスト名: {host}")
+    print("=" * 60)
+    if confirm_host is None:
+        if not sys.stdin.isatty():
+            sys.exit("確認ができないので止めます。--confirm-host <ホスト名> を付けて、もう一度実行してください。")
+        try:
+            confirm_host = input("よければ、上のホスト名をそのまま打ち込んで Enter: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            sys.exit("\n確認ができないので止めます。何もしていません（公開用のデータベースにはつないでいません）。")
+    if confirm_host != host:
+        sys.exit("ホスト名が一致しません。何もしていません（公開用のデータベースにはつないでいません）。")
+
+
+def redact(text: str, secret: str) -> str:
+    """エラーの文に秘密の値が混ざっていたら伏せる。"""
+    password = ""
+    try:
+        password = urlsplit(secret).password or ""
+    except ValueError:
+        pass
+    for value in (secret, password):
+        if value:
+            text = text.replace(value, "****")
+    return text
+
+
 def main():
     ap = argparse.ArgumentParser(description="会議録JSONをデータベースに流し込む")
     ap.add_argument("json", nargs="?", default=str(DEFAULT_IN),
@@ -296,7 +377,14 @@ def main():
     ap.add_argument("-o", "--out", default=str(DEFAULT_SQL),
                     help=f"書き出す命令書（SQL）のファイル名（既定: {DEFAULT_SQL}）")
     ap.add_argument("--apply", action="store_true",
-                    help="書き出したあと、ローカルのデータベースに流し込む")
+                    help="書き出したあと、データベースに流し込む（入れる先は --target）")
+    ap.add_argument("--target", choices=["local", "production"], default="local",
+                    help="入れる先。local＝このパソコンの Docker の中（既定）、"
+                         "production＝公開用（.env.production の SUPABASE_DB_URL）")
+    ap.add_argument("--env-file", default=str(DEFAULT_ENV_FILE),
+                    help=f"公開用の接続先を読むファイル（既定: {DEFAULT_ENV_FILE}）")
+    ap.add_argument("--confirm-host",
+                    help="公開用に入れるときの確認。接続先のホスト名をそのまま書く")
     args = ap.parse_args()
 
     questions = json.loads(Path(args.json).read_text(encoding="utf-8"))
@@ -319,6 +407,8 @@ def main():
 
     if not args.apply:
         print("データベースにはまだ入れていません。入れるときは --apply を付けてください。")
+        if args.target == "production":
+            print("（--target production は、--apply を付けたときだけ意味を持ちます）")
         return
 
     # 選挙期間中（告示日〜投開票日）は、データの更新を休止する（設計書 9-6）
@@ -329,14 +419,30 @@ def main():
                  "データベースには何も入れていません。")
 
     container = db_container()
-    print(f"\nデータベース（{container}）に流し込みます……")
-    result = subprocess.run(
-        ["docker", "exec", "-i", "-e", "PGCLIENTENCODING=UTF8", container,
-         "psql", "-U", "postgres", "-d", "postgres", "-X", "-q", "-v", "ON_ERROR_STOP=1"],
-        input=sql.encode("utf-8"), capture_output=True,
-    )
+    if args.target == "production":
+        url, host = production_target(Path(args.env_file))
+        confirm_production(host, args.confirm_host)
+        print(f"\n公開用のデータベース（{host}）に流し込みます……")
+        # 接続文字列はコマンドの引数に書かず、環境変数で渡す（画面やログに出さないため）。
+        # psql は、このパソコンのデータベースのコンテナに入っているものを借りて使う。
+        result = subprocess.run(
+            ["docker", "exec", "-i", "-e", "PGCLIENTENCODING=UTF8", "-e", "PGSSLMODE=require",
+             "-e", "LOAD_MINUTES_DB_URL", container,
+             "sh", "-c", 'exec psql "$LOAD_MINUTES_DB_URL" -X -q -v ON_ERROR_STOP=1'],
+            input=sql.encode("utf-8"), capture_output=True,
+            env={**os.environ, "LOAD_MINUTES_DB_URL": url},
+        )
+        secret = url
+    else:
+        print(f"\nローカルのデータベース（{container}）に流し込みます……")
+        result = subprocess.run(
+            ["docker", "exec", "-i", "-e", "PGCLIENTENCODING=UTF8", container,
+             "psql", "-U", "postgres", "-d", "postgres", "-X", "-q", "-v", "ON_ERROR_STOP=1"],
+            input=sql.encode("utf-8"), capture_output=True,
+        )
+        secret = ""
     if result.returncode != 0:
-        print(result.stderr.decode("utf-8", errors="replace"))
+        print(redact(result.stderr.decode("utf-8", errors="replace"), secret))
         sys.exit("流し込みに失敗しました。データベースは、流し込む前の状態のままです。")
     print("流し込みが終わりました。")
 
