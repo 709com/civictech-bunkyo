@@ -13,8 +13,14 @@ import {
   isAuthExemptPath,
   validateBasicAuth,
 } from "./lib/basic-auth";
+import { applyNoindexHeader } from "./lib/robots-header";
 
 export function middleware(request: NextRequest) {
+  // 本公開までは、すべての応答に検索エンジン向けの noindex を付ける
+  return applyNoindexHeader(_route(request));
+}
+
+function _route(request: NextRequest): Response {
   // パスワード（Basic認証）は、ほかのどの処理よりも先に確かめる。
   // ページ本体だけでなく、画面切り替えの裏側の通信（RSC）、サーバーアクション、
   // /api、画像の変換（/_next/image）、sitemap など、すべての読み込みが対象。

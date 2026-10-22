@@ -94,3 +94,30 @@ describe("middleware のパスワード（設定が無いとき）", () => {
     expect(middleware(makeRequest("/")).status).toBe(200);
   });
 });
+
+describe("middleware の noindex ヘッダー", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("プレビュー中は、401 にも静的ファイルにも noindex を付ける", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("SITE_PUBLIC_RELEASE", "");
+    vi.stubEnv("BASIC_AUTH_USER", USER);
+    vi.stubEnv("BASIC_AUTH_PASSWORD", PASSWORD);
+    for (const path of ["/", "/robots.txt", "/_next/static/chunks/main.js"]) {
+      expect(middleware(makeRequest(path)).headers.get("x-robots-tag")).toBe(
+        "noindex, nofollow, noarchive"
+      );
+    }
+    expect(
+      middleware(makeRequest("/", withAuth())).headers.get("x-robots-tag")
+    ).toBe("noindex, nofollow, noarchive");
+  });
+
+  it("本公開では noindex を付けない", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("SITE_PUBLIC_RELEASE", "true");
+    expect(middleware(makeRequest("/")).headers.get("x-robots-tag")).toBeNull();
+  });
+});

@@ -5,6 +5,7 @@ import NextTopLoader from "nextjs-toploader";
 import { siteConfig } from "@/config/site.config";
 import type { ReactNode } from "react";
 import { env } from "@/lib/env";
+import { isPublicRelease } from "@/lib/site-release";
 
 /**
  * 本文フォント。モリサワのユニバーサルデザイン書体 BIZ UDPGothic を使用する。
@@ -59,17 +60,25 @@ export const metadata: Metadata = {
     description: siteConfig.siteDescription,
     images: [ogImage.url],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
+  // 本公開（SITE_PUBLIC_RELEASE=true）までは、検索エンジンに載せない（noindex）
+  robots: isPublicRelease()
+    ? {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-video-preview": -1,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+        },
+      }
+    : {
+        index: false,
+        follow: false,
+        nocache: true,
+        googleBot: { index: false, follow: false, noimageindex: true },
+      },
 };
 
 export const viewport: Viewport = {
