@@ -173,6 +173,34 @@ def check_case(c, cache):
         t = (p or {}).get("text") or ""
         m = re.search(re.escape(c["anchor"]) + r"、?([^、。\s　［]{2,6})(?=でございます|です)", t)
         return bool(m) and "［非公開" not in t, f"「{c['anchor']}」のあとの名前 {'残っている（' + str(len(m.group(1))) + '文字）' if m else '見つからない'}"
+    if k == "gq_item_title":
+        # 委員会の一般質問の項目名の出どころ（v0.3.7）。名前は書かず、出どころ・分野・空かどうかだけを比べる
+        it = next((x for x in r["general_question"].get("items", []) if x["no"] == c["item"]), None)
+        if not it:
+            return False, f"項目{c['item']}が無い"
+        ok = it.get("title_source") == c["source"]
+        if "field" in c:
+            ok = ok and it.get("title_field") == c["field"] and it["title"] == f"（{c['field']}）"
+        if "blank" in c:
+            ok = ok and (it["title"] == "") == c["blank"]
+        if "rule_contains" in c:
+            ok = ok and c["rule_contains"] in ((it.get("title_evidence") or {}).get("rule") or "")
+        return ok, f"項目{c['item']} 出どころ「{it.get('title_source')}」・分野「{it.get('title_field')}」・空欄={it['title'] == ''}"
+    if k == "answer_title_from_file":
+        # 中間ファイルの最初の答弁の本文に、今の道具の「答弁の前置き」の読み取りをかける（作り直していない試しの組でも確かめられる）
+        import sys
+        sys.path.insert(0, os.path.dirname(__file__))
+        from split_committee_minutes import extract_answer_title
+        it = next((x for x in r["general_question"].get("items", []) if x["no"] == c["item"]), None)
+        s = next((x for x in r["speeches"] if it and it["answers"] and x["seq"] == it["answers"][0]["seq"]), None)
+        t, _ = extract_answer_title(s["text"]) if s else ("", "")
+        return t == c["expect"], f"項目{c['item']}の最初の答弁から「{t}」"
+    if k == "gq_honkaigi_titles_unchanged":
+        # 本会議は質問者の名乗りだけ（答弁・言葉からの推定をしない）
+        its = r["general_question"].get("items", [])
+        bad = [x["no"] for x in its if x.get("title_source") not in ("質問", "") or x["title"] != x.get("title_question")
+               or (x["title"] and x.get("title_source") != "質問")]
+        return bool(its) and not bad, f"項目 {len(its)}・決まりと違う項目 {bad}"
     return False, f"知らない確かめ方 {k}"
 
 

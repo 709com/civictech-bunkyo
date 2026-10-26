@@ -826,6 +826,73 @@
    "anchor": "千代田区長"
   },
   {
+   "id": "H01",
+   "set": "term",
+   "file": "2023-06-26_建設委員会_0626建設",
+   "check": "gq_item_title",
+   "item": 1,
+   "source": "質問",
+   "blank": false,
+   "why": "質問者が名乗った項目名があればそれを使う（v0.3.7、10-27 先生の決定⑩の①）"
+  },
+  {
+   "id": "H02",
+   "set": "term",
+   "file": "2023-06-26_建設委員会_0626建設",
+   "check": "gq_item_title",
+   "item": 2,
+   "source": "言葉から推定",
+   "field": "まちづくり",
+   "why": "名乗りも答弁の前置きも無いとき、質問の本文の言葉から分野を推定し「（まちづくり）」と付ける（決定⑩の③）"
+  },
+  {
+   "id": "H03",
+   "set": "trial",
+   "file": "01_H23総務0224",
+   "check": "answer_title_from_file",
+   "item": 1,
+   "expect": "地上デジタル放送",
+   "why": "最初の答弁の前置き「…に関するお尋ねにお答えいたします」から項目名を取る（決定⑩の②。今期分には当たりが無いので試しの組で確かめる）"
+  },
+  {
+   "id": "H04",
+   "set": "term",
+   "file": "2025-12-10_建設委員会_1210建設①",
+   "check": "gq_item_title",
+   "item": 4,
+   "source": "言葉から推定",
+   "why": "答弁の冒頭が宛名だけ（「〇〇委員の御質問に御答弁する前に」）のときは項目名にしない"
+  },
+  {
+   "id": "H05",
+   "set": "term",
+   "file": "2025-09-30_建設委員会_0930建設①",
+   "check": "gq_item_title",
+   "item": 4,
+   "source": "",
+   "blank": true,
+   "rule_contains": "1つも当たらない",
+   "why": "言葉が1つも当たらないときは空欄のまま（推測で埋めない）"
+  },
+  {
+   "id": "H06",
+   "set": "term",
+   "file": "2023-06-30_総務区民委員会_0630総務区民",
+   "check": "gq_item_title",
+   "item": 1,
+   "source": "",
+   "blank": true,
+   "rule_contains": "同点",
+   "why": "回数も言葉の種類の数も同点のときは決めずに空欄"
+  },
+  {
+   "id": "H07",
+   "set": "term",
+   "file": "2023-06-12_本会議",
+   "check": "gq_honkaigi_titles_unchanged",
+   "why": "本会議の一般質問の見出しは今までどおり（答弁・言葉からの推定をしない）"
+  },
+  {
    "id": "A01",
    "set": "all",
    "check": "verify_rebuild",

@@ -392,13 +392,28 @@ def write_disorder(results, out_dir):
         w.writerows(rows)
 
 
+def title_evidence_text(it):
+    """項目名の根拠を1つの欄の文字にする（v0.3.7）。"""
+    ev = it.get("title_evidence") or {}
+    if it.get("title_source") == "答弁":
+        return f"発言{ev.get('answer_seq')}「{ev.get('wording', '')}」"
+    if not ev:
+        return ""
+    parts = [f"{f}{n}（" + "・".join(f"{w}{c}" for w, c in ev["hits"].get(f, {}).items()) + "）"
+             for f, n in ev.get("totals", {}).items()]
+    out = ev.get("rule", "") + ("：" + "、".join(parts) if parts else "")
+    if ev.get("answer_rejected"):
+        out += f"／答弁の前置き「{ev['answer_rejected']}」は宛名などで使わず"
+    return out
+
+
 def write_gq_csv(all_results, path):
     """委員会の一般質問の一覧（内部用。公開しない。著作権法40条の但書の注意）。"""
     n_items = n_chk = 0
     with open(path, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
         w.writerow(["日付", "委員会", "分冊", "項目番号", "質問者の表記", "質問者（名簿のフルネーム）", "関連質問",
-                    "項目名", "項目名の取り方", "答弁者（フルネーム・肩書）", "質問の発言番号", "発言の範囲",
+                    "項目名", "項目名の取り方", "項目名の出どころ", "項目名の根拠（答弁の文言・当たった言葉）", "答弁者（フルネーム・肩書）", "質問の発言番号", "発言の範囲",
                     "段落の範囲", "要確認", "委員長の宣言との照合", "中間ファイル"])
         for r in all_results:
             mt = r["meeting"]
@@ -417,7 +432,7 @@ def write_gq_csv(all_results, path):
                 ans = "、".join(dict.fromkeys(f"{a['full_name'] or '（空欄）'}（{a['role']}）" for a in it["answers"]))
                 w.writerow([mt["date_iso"], mt["committee_name"], mt["volume"] or "", it["no"], it["questioner_label"],
                             it["questioner_full_name"], "はい" if it["related_question"] else "", it["title"],
-                            it.get("title_rule", ""), ans, " ".join(map(str, it["question_seqs"])), f"{lo}〜{hi}",
+                            it.get("title_rule", ""), it.get("title_source", ""), title_evidence_text(it), ans, " ".join(map(str, it["question_seqs"])), f"{lo}〜{hi}",
                             f"{sp[lo]['para_start']}〜{sp[hi]['para_end']}", "；".join(it["needs_check"]), decl,
                             r["file"]["trial_name"]])
                 n_items += 1

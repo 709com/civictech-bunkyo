@@ -18,7 +18,7 @@ from collections import Counter, OrderedDict
 from committee_docx_text import read_document
 
 TOOL_NAME = "split_committee_minutes.py"
-TOOL_VERSION = "0.3.6 (2026-10-27 人事案件は氏名と略歴を残し住所・生年月日を隠す)"
+TOOL_VERSION = "0.3.7 (2026-10-27 委員会の一般質問の項目名：質問→答弁の前置き→言葉から分野を推定)"
 
 SP = "　"
 DIG = str.maketrans("０１２３４５６７８９", "0123456789")
@@ -1308,6 +1308,7 @@ class Meeting:
         # 本人が「２つあります」と言っているのに、同じ人の項目が1つのとき
         by_q = Counter(i["questioner_key"] for i in items)
         for it in items:
+            self._fill_item_title(it, sp_text)
             if it.get("count_hint") and by_q[it["questioner_key"]] == 1:
                 it["needs_check"].append(f"本人が「{it['count_hint']}」と言っているが、切れ目は見つからず1項目のまま")
             if not it["answers"]:
@@ -1338,6 +1339,46 @@ class Meeting:
                                      + (f"・{d['people']}人" if d["people"] else "")
                                      + f"）と、見つけた項目の数（{len(items)}件・{n_people}人）が合わない")
         self.gq = gq
+
+    def _fill_item_title(self, it, sp_text):
+        """項目名の出どころを決める（v0.3.7）。本会議は今までどおり質問者の名乗りだけ（見出しの仕組みは変えない）。
+        title_source："質問"（質問者の名乗り）／"答弁"（最初の答弁の前置き）／"言葉から推定"（分野をかっこ付きで）／""（空欄）
+        """
+        it["title_question"] = it["title"]  # 質問者の名乗りから取れたもの（空のこともある）
+        it["title_field"] = ""
+        it["title_evidence"] = None
+        if it["title"]:
+            it["title_source"] = "質問"
+            return
+        it["title_source"] = ""
+        if not self.is_committee:
+            return
+        blank = "項目名の決まった言い回しが見つからず空欄"
+        nc = it["needs_check"]
+        # ② 最初の答弁の前置き
+        rejected = ""
+        if it["answers"]:
+            a0 = it["answers"][0]["seq"]
+            t, wording = extract_answer_title(sp_text.get(a0, ""))
+            if t:
+                it.update(title=t, title_source="答弁", title_rule="最初の答弁の前置き（「…についてお答えします」など）",
+                          title_evidence={"answer_seq": a0, "wording": wording})
+                nc[nc.index(blank)] = "項目名は質問者の名乗りが無く、最初の答弁の前置きから取った"
+                return
+            rejected = wording
+        # ③ 質問者の発言の本文の言葉から分野を推定
+        est = estimate_field("\n".join(sp_text.get(q, "") for q in it["question_seqs"]))
+        ev = {"field": est["field"], "rule": est["rule"], "totals": est["totals"], "hits": est["hits"]}
+        if rejected:
+            ev["answer_rejected"] = rejected  # 宛名だけなど、項目名にしなかった答弁の前置き
+        it["title_evidence"] = ev
+        if est["field"]:
+            it.update(title=f"（{est['field']}）", title_field=est["field"], title_source="言葉から推定",
+                      title_rule="質問の本文の言葉の一覧で分野を推定（AI なし）")
+            words = "・".join(f"{w}{n}" for w, n in est["hits"][est["field"]].items())
+            nc[nc.index(blank)] = f"項目名は言葉から分野を推定（要確認。{est['field']}：{words}）"
+        else:
+            nc[nc.index(blank)] = f"項目名の決まった言い回しが見つからず、答弁の前置き・言葉の一覧でも決まらず空欄（{est['rule']}）"
 
     # ------------------------------------------------ 議事の進行が乱れたときの言葉の印
     DISORDER = [
@@ -1826,6 +1867,106 @@ def extract_title(text, limit=600, honkaigi=False):
     if not found:
         return "", "", []
     return found[0][0], found[0][1], [f[0] for f in found]
+
+
+# ---- 委員会の一般質問の項目名の代わり（v0.3.7。2026-10-27 先生の決定⑩）
+# ①質問者の名乗り（extract_title）→ ②最初の答弁の前置き → ③質問の本文の言葉から分野を推定（AI は使わない）
+ANSWER_TITLE_RE = re.compile(
+    r"(?:^|。|\n)" + TITLE_LEAD +
+    r"([^。、\n]{2,40}?)"
+    r"(?:(?:について|につきまして|に関しまして|に関して)(?:の(?:御質問|御質疑|お尋ね)に)?"
+    r"|(?:に関する|についての|に係る|に対する|の)(?:御質問|御質疑|お尋ね)(?:に|へ)?)"
+    r"、?(?:まず、?)?"
+    r"(?:お答え(?:します|いたします|申し上げます|させていただきます|をいたします|をします|したい|いたしたい)"
+    r"|御答弁(?:します|いたします|申し上げます|させていただきます)|答弁(?:いたします|申し上げます|させていただきます))")
+# 宛名だけ（「〇〇委員の御質問にお答えします」）や、中身のない前置きは項目名にしない
+ANSWER_TITLE_NG = re.compile(
+    r"(委員|議員|委員長|副委員長|さん|様|先生|区長|会派)(から|より)?$|^(幾つか|いくつか|[０-９0-9一二三四五六七八九十何数]+(点|つ|件))|"
+    r"^(先ほど|ただいま|今|その|この|御|ご)の?$|^(先ほど|ただいま|今)の(御質問|お尋ね)")
+
+
+def extract_answer_title(text, limit=200):
+    """最初の答弁の冒頭から「〇〇についてお答えします」の〇〇を拾う。返り値：(項目名, 文言) か ("", 不採用の文言)。"""
+    rejected = ""
+    for m in ANSWER_TITLE_RE.finditer(text[:limit]):
+        t = re.sub(r"^(まず|初めに|最初に|次に|続いて|私からは|では|それでは)[、]?", "", m.group(1)).strip(SP + "、 \n")
+        if not t or ANSWER_TITLE_NG.search(t):
+            rejected = rejected or m.group(0).strip("。\n")
+            continue
+        return t, m.group(0).strip("。\n")
+    return "", rejected
+
+
+# 分野と言葉の一覧（辞書）。1つの言葉は1つの分野にだけ置く。長い言葉から先に当て、重ねて数えない。
+# 初期セットは 9章の政策タグ案（子育て・教育・防災・まちづくり・DX・福祉・環境・財政）。
+# 足した3分野：保健・医療（健診・衛生・出生率の質問が子育て・福祉に混ざるため）、
+# 文化・スポーツ（図書館・運動施設・観劇の質問の受け皿）、地域・区民活動（町会・自治会の質問の受け皿）。
+FIELD_WORDS = {
+    "子育て": ["子育て", "保育園", "保育所", "保育室", "保育士", "保育", "待機児童", "育成室", "児童館", "幼稚園", "出産",
+            "妊娠", "妊婦", "乳幼児", "子ども家庭支援", "児童相談所", "児相", "子ども食堂", "こども食堂", "放課後",
+            "アクティ", "アフタースクール", "ひとり親", "通園", "産後", "子連れ", "こども計画", "こども大綱", "こども基本法"],
+    "教育": ["教育", "学校", "小学校", "中学校", "教員", "教職員", "教師", "生徒", "不登校", "いじめ", "給食", "修学旅行",
+           "授業", "学力", "スクールカウンセラー", "スクールソーシャルワーカー", "通知表", "部活", "学習", "ＥＳＡＴ",
+           "スピーキングテスト", "入試", "校舎", "教材", "校長", "学級", "登校", "通学"],
+    "防災": ["防災", "災害", "避難", "避難所", "震災", "地震", "耐震", "備蓄", "帰宅困難", "消防", "火災", "水害", "風水害",
+           "浸水", "大雨", "台風", "井戸", "危機管理", "発災", "被災", "要支援者", "ハザードマップ", "土砂", "崖", "在宅避難",
+           "防災倉庫", "マンホールトイレ", "救急", "陥没"],
+    "まちづくり": ["まちづくり", "都市計画", "公園", "道路", "交差点", "交通", "自転車", "駐輪", "空き家", "住宅", "建築",
+              "再開発", "再整備", "無電柱化", "電柱", "歩道", "細街路", "国有地", "用途地域", "高さ制限", "景観", "コミュニティバス",
+              "Ｂ－ぐる", "街路", "都道", "区道", "下水道", "環状", "マンション", "パーゴラ", "遊具"],
+    "DX": ["ＤＸ", "DX", "デジタル", "システム", "オンライン", "アプリ", "ＳＮＳ", "SNS", "ホームページ", "インターネット",
+           "電子", "マイナンバー", "ＡＩ", "ＩＣＴ", "ICT", "キャッシュレス", "ポータルサイト", "メール", "ＬＩＮＥ", "タブレット"],
+    "福祉": ["福祉", "障害", "高齢者", "高齢", "介護", "生活保護", "生活困窮", "貧困", "手話", "意思疎通", "認知症",
+           "地域包括", "放課後等デイサービス", "医療的ケア", "生活支援", "重層的支援", "合理的配慮", "ひとり暮らし",
+           "単身", "バリアフリー", "小規模多機能", "要配慮"],
+    "環境": ["環境", "脱炭素", "ごみ", "ゴミ", "リサイクル", "温暖化", "気候", "省エネ", "再生可能エネルギー", "みどり",
+           "樹木", "樹林", "暑さ対策", "猛暑", "熱中症", "騒音", "プラスチック", "公害", "ＣＯ２", "CO2", "空調", "エアコン"],
+    "財政": ["財政", "予算", "決算", "基金", "歳入", "歳出", "区税", "税収", "住民税", "税金", "区債", "補助金", "交付金",
+           "入札", "契約", "発注", "委託料", "経費", "費用", "物価高", "報酬", "公金", "財源", "単価"],
+    "保健・医療": ["健診", "検診", "保健", "医療", "病院", "医師", "看護", "感染症", "ワクチン", "予防接種", "衛生",
+              "出生率", "精神保健", "自殺", "保健センター", "保健所", "がん", "健康"],
+    "文化・スポーツ": ["文化", "芸術", "スポーツ", "図書館", "テニス", "フットサル", "観劇", "アカデミー", "文化財",
+                "観光", "祭り", "博物館", "美術館", "万博", "運動公園", "体育施設"],
+    "地域・区民活動": ["町会", "自治会", "地域活動", "ＮＰＯ", "NPO", "ボランティア", "商店街", "協働", "地域振興",
+                "区民センター", "コミュニティ"],
+}
+FIELD_ORDER = list(FIELD_WORDS)
+_W2F = {w: f for f, ws in FIELD_WORDS.items() for w in ws}
+assert len(_W2F) == sum(len(ws) for ws in FIELD_WORDS.values()), "同じ言葉が2つの分野に入っている"
+FIELD_RE = re.compile("|".join(re.escape(w) for w in sorted(_W2F, key=len, reverse=True)))
+
+
+def estimate_field(text):
+    """質問者の発言の本文から、言葉の一覧で分野を推定する（AI なし）。
+    決まり：言葉が当たった回数の合計が最も多い分野を採る。
+      - 合計が同点のときは、当たった言葉の種類の数が多い方。それも同点なら決めない（空欄。推測で埋めない）。
+      - どの言葉も当たらなければ空欄。
+    返り値：{"field", "hits": {分野: {言葉: 回数}}, "totals", "rule"}（field が "" なら空欄）
+    """
+    hits = {}
+    for m in FIELD_RE.finditer(text):
+        w = m.group(0)
+        hits.setdefault(_W2F[w], Counter())[w] += 1
+    totals = {f: sum(c.values()) for f, c in hits.items()}
+    res = {"field": "", "hits": {f: dict(c.most_common()) for f, c in hits.items()},
+           "totals": dict(sorted(totals.items(), key=lambda x: (-x[1], FIELD_ORDER.index(x[0]))))}
+    if not totals:
+        res["rule"] = "言葉が1つも当たらない（空欄）"
+        return res
+    top = max(totals.values())
+    cand = [f for f in totals if totals[f] == top]
+    if len(cand) > 1:
+        kinds = {f: len(hits[f]) for f in cand}
+        k = max(kinds.values())
+        cand = [f for f in cand if kinds[f] == k]
+        if len(cand) > 1:
+            res["rule"] = f"同点（{'・'.join(sorted(cand, key=FIELD_ORDER.index))}、各{top}回・各{k}種類）で決めない（空欄）"
+            return res
+        res["rule"] = f"回数は同点（{top}回）、言葉の種類の数（{k}）で決めた"
+    else:
+        res["rule"] = "回数が最も多い分野"
+    res["field"] = cand[0]
+    return res
 
 
 def fingerprint(text, n):
