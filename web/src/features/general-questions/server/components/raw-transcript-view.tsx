@@ -26,8 +26,8 @@ function parseSpeakerTurns(rawText: string): SpeakerTurn[] {
 }
 
 function isQuestioner(speaker: string): boolean {
-  // Questioner lines have a seat number pattern like ◯58番（山田ゆみこ）
-  return /^\d+番/.test(speaker);
+  // 質問者（議員）の発言かどうか。文京区の会議録は「○○議員」、ほかの議会の見本は「◯58番（山田ゆみこ）」の形
+  return /^\d+番/.test(speaker) || /議員$/.test(speaker);
 }
 
 export function RawTranscriptView({ rawText }: { rawText: string }) {

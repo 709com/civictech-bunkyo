@@ -60,6 +60,11 @@ function ChatBubbleAnswer({
   );
 }
 
+/** 空文字・空白だけ・未設定は「文が無い」とみなす */
+function hasText(text: string | null | undefined): text is string {
+  return typeof text === "string" && text.trim().length > 0;
+}
+
 interface QuestionChatViewProps {
   topics: GeneralQuestionTopic[];
 }
@@ -77,12 +82,20 @@ export function QuestionChatView({ topics }: QuestionChatViewProps) {
           <p className="text-center text-xs font-medium text-mirai-text-secondary bg-mirai-surface-muted rounded-full px-3 py-1 mx-auto">
             {topic.title}
           </p>
-          <ChatBubbleQuestion text={topic.question_summary} />
-          <ChatBubbleAnswer
-            text={topic.answer_summary}
-            role={topic.answerer_role}
-            name={topic.answerer_name}
-          />
+          {/*
+            質問側の文（question_summary）は、今のデータ（会議録からの抜き出し）では空。
+            空の吹き出しは出さない。あとで要約などの文が入れば、そのまま表示される
+          */}
+          {hasText(topic.question_summary) && (
+            <ChatBubbleQuestion text={topic.question_summary} />
+          )}
+          {hasText(topic.answer_summary) && (
+            <ChatBubbleAnswer
+              text={topic.answer_summary}
+              role={topic.answerer_role}
+              name={topic.answerer_name}
+            />
+          )}
         </div>
       ))}
     </div>

@@ -24,8 +24,9 @@ function parseSpeakerTurns(rawText: string): SpeakerTurn[] {
   return turns;
 }
 
+// 質問者（議員）の発言かどうか。文京区の会議録は「○○議員」、ほかの議会の見本は「◯番」の形
 function isQuestioner(speaker: string): boolean {
-  return /^\d+番/.test(speaker);
+  return /^\d+番/.test(speaker) || /議員$/.test(speaker);
 }
 
 function RawTranscriptContent({
@@ -97,28 +98,41 @@ export function QuestionViewToggle({
   topics,
   rawText,
 }: QuestionViewToggleProps) {
-  const [mode, setMode] = useState<"summary" | "raw">("summary");
+  // 「論点ごと」＝論点の見出しと、答弁の該当部分（今は会議録の原文の抜き出し）。
+  // 「全文」＝この一般質問の発言を、会議録の順にすべて並べたもの
+  const [mode, setMode] = useState<"topics" | "raw">("topics");
+  // 質問側の文が1つも無い（今のデータ）ときは、論点ごとの表示に質問が出ないことを書き添える
+  const hasQuestionText = topics.some(
+    (t) => (t.question_summary ?? "").trim().length > 0
+  );
 
   return (
     <div>
       <div className="flex gap-2 mb-6">
         <Button
-          variant={mode === "summary" ? "default" : "outline"}
+          variant={mode === "topics" ? "default" : "outline"}
           size="sm"
-          onClick={() => setMode("summary")}
+          onClick={() => setMode("topics")}
         >
-          要約
+          論点ごと
         </Button>
         <Button
           variant={mode === "raw" ? "default" : "outline"}
           size="sm"
           onClick={() => setMode("raw")}
         >
-          詳しく（原文）
+          全文
         </Button>
       </div>
-      {mode === "summary" ? (
-        <QuestionChatView topics={topics} />
+      {mode === "topics" ? (
+        <>
+          {!hasQuestionText && (
+            <p className="mb-4 text-xs leading-relaxed text-mirai-text-secondary">
+              論点ごとに、答弁の該当部分を会議録から抜き出して載せています。質問の内容は「全文」でご覧ください。
+            </p>
+          )}
+          <QuestionChatView topics={topics} />
+        </>
       ) : (
         <RawTranscriptContent rawText={rawText} topics={topics} />
       )}
