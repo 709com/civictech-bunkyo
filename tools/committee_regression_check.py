@@ -8,6 +8,7 @@ import glob
 import json
 import os
 import re
+from collections import Counter
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DIRS = {"trial": [os.path.join(ROOT, "data", "委員会試し"), os.path.join(ROOT, "data", "委員会試し", "追加")],
@@ -135,6 +136,15 @@ def check_case(c, cache):
     if k == "para_range_withheld":
         bad = [q for q in range(c["from"], c["to"] + 1) if para(r, q) and para(r, q)["text"] is not None and para(r, q)["text"].strip()]
         return not bad, f"非公開でない（空でない）段落 {bad[:10]}"
+    if k == "jinji_block":
+        # 人事案件の「記」以下：住所と生年月日の行だけ非公開、氏名と略歴は残る（2026-10-27 先生）
+        ps = [para(r, q) for q in range(c["from"], c["to"] + 1) if para(r, q)]
+        wh = Counter(p.get("withheld") for p in ps if p["text"] is None)
+        kept = [p for p in ps if p["text"] is not None and p["text"].strip()]
+        has_name = any(re.sub(r"[\s　]", "", p["text"]).startswith("氏名") for p in kept)
+        has_career = any(re.sub(r"[\s　]", "", p["text"]).startswith("略歴") for p in kept)
+        ok = set(wh) == {"住所", "生年月日"} and has_name and has_career and len(kept) >= c.get("min_kept", 3)
+        return ok, f"非公開 {dict(wh)}・残した段落 {len(kept)}・氏名の行 {has_name}・略歴の行 {has_career}"
     if k == "table_withheld_cells":
         ps = [p for p in r["raw_paragraphs"] if p.get("in_table") and p["text"] is None]
         cells = sorted({tuple(p["in_table"]) for p in ps})

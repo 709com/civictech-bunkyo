@@ -18,7 +18,7 @@ from collections import Counter, OrderedDict
 from committee_docx_text import read_document
 
 TOOL_NAME = "split_committee_minutes.py"
-TOOL_VERSION = "0.3.5 (2026-10-27 再検査の指摘を反映・確認表)"
+TOOL_VERSION = "0.3.6 (2026-10-27 人事案件は氏名と略歴を残し住所・生年月日を隠す)"
 
 SP = "　"
 DIG = str.maketrans("０１２３４５６７８９", "0123456789")
@@ -570,14 +570,19 @@ class Meeting:
                 self.issues.append(f"段落{t['para']}: 時刻の行「{t['text']}」：{t['possible_typo']}")
             prev = t
 
+    jinji_fields = None
+    jinji_kept = None
+
     def withhold(self, para, reason):
         if not any(w["para"] == para for w in self.withheld):
             self.withheld.append({"para": para, "reason": reason})
 
     def detect_personal(self):
         """請願者の欄以外の個人情報（人事案件の住所・生年月日、専決処分の表の相手方）を探す。"""
+        self.jinji_fields = Counter()
+        self.jinji_kept = []
         # 「相手方」は区の提案説明の契約の相手方（会社名など）にも出るので、行の判定には使わない（2026-10-26 先生の決定で残す）
-        pat = re.compile(rf"生年月日|[{NUMCH}]+年[{NUMCH}]+月[{NUMCH}]+日生|^住所|現住所|略歴")
+        pat = re.compile(rf"生年月日|[{NUMCH}]+年[{NUMCH}]+月[{NUMCH}]+日生|^住所|現住所")  # 略歴は残す（2026-10-27 先生）
         # 請願者・陳情者の欄：「・請　願　者」の行から、次の「・」の欄・空行・番号の見出しまで（委員長報告の一覧の中も）
         inpet = False
         for p in self.paras:
@@ -599,7 +604,17 @@ class Meeting:
                 if t.startswith("○") or parse_time(p["text"]) or SEP_LINE_RE.match(p["text"]) or re.match(rf"^(追加)?日程第[{NUMCH}]+", t):
                     block = False
                 elif t:
-                    self.withhold(p["para"], "人事案件の議案文（氏名・住所・生年月日・略歴）")
+                    # 2026-10-27 先生の決定：公職に任命される人の氏名と略歴は残し、住所と生年月日だけ隠す
+                    if re.match(r"^(現?住所|住居)", t):
+                        self.withhold(p["para"], "住所")
+                        self.jinji_fields["住所"] += 1
+                    elif re.match(r"^生年月日", t):
+                        self.withhold(p["para"], "生年月日")
+                        self.jinji_fields["生年月日"] += 1
+                    else:
+                        fm = re.match(r"^(氏名|略歴|性別|職業|年齢|本籍)", t)
+                        self.jinji_fields[fm.group(1) if fm else "（略歴の行など）"] += 1
+                        self.jinji_kept.append(p["para"])
                 continue
             if re.search(r"(下記|左記)の者を.*(選任|任命|推薦|同意|諮問)", t):
                 # 議員を公職の候補者として推薦する議案（広域連合議会議員の選挙など）は、私人の情報ではないので対象外
@@ -660,7 +675,7 @@ class Meeting:
             elif pat.search(t):
                 # 本文の中の言葉としての「相手方」などは多いので、短い行（議案文の欄）だけを対象にする
                 if len(t) <= 60 and not t.startswith("○") and not re.search(r"資料|御覧|ご覧", t):
-                    self.withhold(p["para"], "人事案件などの住所・生年月日・略歴らしい行（要確認）")
+                    self.withhold(p["para"], "住所・生年月日らしい行（要確認）")
 
     # ------------------------------------------------ 発言者の特定
     VARIANTS = str.maketrans({"﨑": "崎", "髙": "高", "邊": "辺", "邉": "辺", "齋": "斎", "齊": "斉", "濵": "浜",

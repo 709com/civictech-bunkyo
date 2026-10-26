@@ -262,6 +262,7 @@ def run_one(name, drive_path, reason, copy_dir=None, conv_dir=None, date_hint=No
         "gq_items_needs_check": sum(1 for i in m.gq.get("items", []) if i["needs_check_flag"]),
         "disorder_words": len(m.disorder),
         "spanning_speeches": sum(1 for sp in sps if sp.get("sections_spanned")),
+        "jinji_fields": dict(m.jinji_fields or {}), "jinji_kept_paragraphs": len(m.jinji_kept or []),
     }
     return result, m
 

@@ -583,26 +583,28 @@
    "id": "J01",
    "set": "trial",
    "file": "A6_R5本会議0608",
-   "check": "para_range_withheld",
+   "check": "jinji_block",
    "from": 634,
    "to": 668,
-   "why": "人事の「記」以下（氏名・住所・生年月日・略歴）"
+   "why": "人事案件の「記」以下：住所と生年月日だけ隠し、氏名と略歴は残す（2026-10-27 先生）"
   },
   {
    "id": "J02",
    "set": "trial",
    "file": "A7_R6本会議1212",
-   "check": "para_range_withheld",
+   "check": "jinji_block",
    "from": 702,
-   "to": 742
+   "to": 742,
+   "why": "人事案件の「記」以下：住所と生年月日だけ隠し、氏名と略歴は残す（2026-10-27 先生）"
   },
   {
    "id": "J03",
    "set": "trial",
    "file": "A7_R6本会議1212",
-   "check": "para_range_withheld",
+   "check": "jinji_block",
    "from": 768,
-   "to": 804
+   "to": 804,
+   "why": "人事案件の「記」以下：住所と生年月日だけ隠し、氏名と略歴は残す（2026-10-27 先生）"
   },
   {
    "id": "J04",
