@@ -36,7 +36,7 @@ export default function AboutPage() {
           <dt className="shrink-0 font-bold text-slate-900">費用</dt>
           <dd>
             {siteConfig.operator.funding}
-            で運営しています。選挙に係る費用には使用しません。
+            で運営しています。政務活動費は、選挙に係る費用には使用しません。
           </dd>
         </div>
       </dl>
