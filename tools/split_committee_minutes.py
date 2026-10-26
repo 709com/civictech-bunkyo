@@ -18,7 +18,7 @@ from collections import Counter, OrderedDict
 from committee_docx_text import read_document
 
 TOOL_NAME = "split_committee_minutes.py"
-TOOL_VERSION = "0.3.2 (2026-10-27 契約の相手方の代表者の氏名を隠す)"
+TOOL_VERSION = "0.3.5 (2026-10-27 再検査の指摘を反映・確認表)"
 
 SP = "　"
 DIG = str.maketrans("０１２３４５６７８９", "0123456789")
@@ -115,6 +115,14 @@ def split_official_line(body):
     t = body.strip(SP + " \t")
     runs = list(re.finditer("　{2,}", t))
     if not runs:
+        # 名前と肩書の間が1字分の空白のこともある（「横　山　尚　人　企画課長」）。
+        # 最後の空白のあとが肩書らしい（長・参事・主査・取扱・監・理事などで終わる2文字以上）なら、そこで切る
+        one = list(re.finditer("[　 ]", t))
+        if one:
+            last1 = one[-1]
+            name, title = nospace(t[:last1.start()]), nospace(t[last1.end():])
+            if len(title) >= 2 and re.search(r"(長|参事|主査|取扱|監|理事|官|者|所長|担当)$", title) and 2 <= len(name) <= 6:
+                return title, name
         return None, nospace(t)
     last = runs[-1]
     name, title = nospace(t[:last.start()]), nospace(t[last.end():])
@@ -140,7 +148,7 @@ def split_staff_line(body):
 
 
 def is_spaced_name_only(line):
-    """「　　佐　　藤　　正　　子」のように、1〜3文字ずつ空白で区切られた名前だけの行か。"""
+    """「　　山　　田　　花　　子」のように、1〜3文字ずつ空白で区切られた名前だけの行か。"""
     chunks = [c for c in re.split("[　 ]+", line.strip(SP + " \t")) if c]
     if chunks and len(chunks[0]) >= 2 and re.search(r"(長|者|監|参事|理事|役)$", chunks[0]):
         return False  # 「区長　成　澤　…」のように肩書が先頭にある
@@ -160,9 +168,15 @@ class Meeting:
         paras, n_pd, n_tbl = read_document(self.path)
         # 契約の相手方の代表者の氏名を、読み込んだ直後に段落の中で隠す（企業名・所在地は残す。2026-10-27 先生の決定）
         self.contract_parties = []
+        self.partial_withheld = []
+        # 原文の文字（隠す前）。発言の文字数を原文の長さで数えるためだけに手元に置く（書き出さない）
+        self._orig = {p["para"]: p["text"] for p in paras}
         for p in paras:
             masked, parties = mask_representatives(p["text"])
             if parties:
+                why = "・".join(dict.fromkeys("契約の相手方（個人）の住所・氏名" if x.get("individual") else "代表者の氏名" for x in parties))
+                self.partial_withheld.append({"para": p["para"], "reason": f"{why}（段落の一部を非公開）",
+                                              "partial": True, "orig_chars": len(p["text"]), "count": len(parties)})
                 p["text"] = masked
                 p["ptext"] = mask_representatives(p["ptext"])[0]
                 p["masked_representatives"] = len(parties)
@@ -297,11 +311,20 @@ class Meeting:
                     prev.setdefault("paras", [prev["para"]]).append(para)
                 else:
                     self.agenda_planned.append(rec)
-                lm = re.match(r"^(講師|参考人)[\s　]+(.+?)[\s　]+([^\s　]+?)(氏|さん)?$", t.strip(SP + " \t"))
+                lm = re.match(r"^(講師|参考人)[\s　]+(.+)$", t.strip(SP + " \t"))
                 if lm:
+                    # 末尾の「氏」「さん」を外し、後ろから「3文字以下のかたまり」を名前として集める（「山田　花　氏」→ 山田花）
+                    rest = re.sub(r"[\s　]*(氏|さん)$", "", lm.group(2))
+                    toks = [x for x in re.split(r"[\s　]+", rest) if x]
+                    nm = []
+                    while toks and len(toks[-1]) <= 3 and len(nm) < 3 and not re.fullmatch(r"代表|所長|教授|講師|会長|理事|部長|主任|准教授|顧問|室長", toks[-1]):
+                        nm.insert(0, toks.pop())
+                    if not nm and toks:  # 空白なしで「…教授山田花」とつながっている
+                        nm, toks = [], toks
                     self.roster.append({"section": "講師・参考人（付議事件の欄）", "role": lm.group(1),
-                                        "name": nospace(lm.group(3)), "seat": None, "affiliation": nospace(lm.group(2)),
-                                        "raw": s, "para": para})
+                                        "name": "".join(nm), "seat": None, "affiliation": "".join(toks),
+                                        "raw": s, "para": para,
+                                        "note": "" if nm else "名前と所属の区切りが分からず、名前は空欄（要確認）"})
             elif sec and sec.startswith("その他:"):
                 self.roster.append({"section": sec[4:], "role": None, "name": s, "seat": None,
                                     "raw": t.strip(SP + " \t"), "para": para})
@@ -321,7 +344,7 @@ class Meeting:
         """本会議の説明員（肩書が先）。空行で区切られたまとまりを上から読む。
 
         - 「区長　　成　　澤　　廣　　修」：肩書＋氏名の行
-        - 「　　佐　　藤　　正　　子」：氏名だけの行（肩書は前後の行にある）
+        - 「　　山　　田　　花　　子」：氏名だけの行（肩書は前後の行にある）
         - 「福祉部長」「兼福祉事務所長」「文京保健所参事」：肩書の断片だけの行
           → 氏名の行より前の断片は次の人の肩書の頭、後ろの断片は（「兼」で始まる・前の肩書が「・」で終わる・
              肩書が複数行の人のとき）前の人の肩書の続きとしてつなぐ。
@@ -382,7 +405,7 @@ class Meeting:
         for ln in self.lines[self.body_start:]:
             t = ln["text"].lstrip(SP + " \t")
             if t.startswith("○"):
-                m = re.match(r"^○([^\s　]+)[\s　]", t)
+                m = re.match(r"^○[\s　]*([^\s　]+)[\s　]", t)
                 if m:
                     known.add(m.group(1))
         self.items = []      # 時刻・区切り線・請願文書表・発言 などを順番に
@@ -488,7 +511,7 @@ class Meeting:
                 continue
             if st.startswith("○"):
                 flush()
-                body = st[1:]
+                body = st[1:].lstrip(SP + " ")  # 「○　坂田契約管財課長　…」のように○の直後に空白があることがある
                 m = re.match(r"^([^\s　]+)[\s　]+(.*)$", body)
                 if m:
                     label, text = m.group(1), m.group(2)
@@ -501,7 +524,7 @@ class Meeting:
                     else:
                         label, text = body, ""
                         self.issues.append(f"段落{para}: 発言者の表記だけの行（要確認）：{body[:30]}")
-                cur = {"seq": len(self.speeches) + 1, "para_start": para, "para_end": para,
+                cur = {"seq": len(self.speeches) + 1, "para_start": para, "para_end": para, "line_start": ln["li"], "line_end": ln["li"],
                        "label": label, "_lines": [text.strip(SP + " ")] if text.strip(SP + " ") else [],
                        "stage_inside": []}
                 continue
@@ -525,9 +548,11 @@ class Meeting:
                 if not cur["_lines"] or cur["_lines"][-1] != ph:
                     cur["_lines"].append(ph)
                 cur["para_end"] = para
+                cur["line_end"] = ln["li"]
                 continue
             cur["_lines"].append(st)
             cur["para_end"] = para
+            cur["line_end"] = ln["li"]
         flush()
         close_pet()
         # 時刻の行の食い違い（原文の誤記の可能性）。直さずに印だけ
@@ -559,7 +584,9 @@ class Meeting:
             t = nospace(p["text"])
             if re.match(r"^・(請願者|陳情者)", t):
                 inpet = True
-            elif inpet and (not t or t.startswith("・") or t.startswith("○") or re.match(r"^[一二三四五六七八九十0-9０-９]+(請願|陳情)", t)):
+            elif inpet and (not t or (t.startswith("・") and not re.fullmatch(r"[・･\.．…]+", t)) or t.startswith("○")
+                            or re.match(r"^[一二三四五六七八九十0-9０-９]+(請願|陳情)", t)):
+                # 「・・・・」だけの行は伏せ字（住所を伏せた行）なので、欄の続きとして扱い、次の名前の行も隠す
                 inpet = False
             if inpet:
                 self.withhold(p["para"], "請願者・陳情者の欄（住所・氏名）")
@@ -632,19 +659,39 @@ class Meeting:
                 continue
             elif pat.search(t):
                 # 本文の中の言葉としての「相手方」などは多いので、短い行（議案文の欄）だけを対象にする
-                if len(t) <= 60 and not t.startswith("○"):
+                if len(t) <= 60 and not t.startswith("○") and not re.search(r"資料|御覧|ご覧", t):
                     self.withhold(p["para"], "人事案件などの住所・生年月日・略歴らしい行（要確認）")
 
     # ------------------------------------------------ 発言者の特定
+    VARIANTS = str.maketrans({"﨑": "崎", "髙": "高", "邊": "辺", "邉": "辺", "齋": "斎", "齊": "斉", "濵": "浜",
+                              "德": "徳", "瀨": "瀬", "栁": "柳", "曵": "曳", "冨": "富", "嶋": "島", "眞": "真"})
+
     def resolve_speakers(self):
-        council = [r for r in self.roster if r["section"] in ("出席委員", "委員外議員", "出席議員")]
-        officials = [r for r in self.roster if r["section"] == "出席説明員"]
-        staff = [r for r in self.roster if r["section"] == "事務局職員"]
+        # 異体字（﨑と崎、髙と高 など）は、照らし合わせるときだけ同じ字とみなす（記録する名前は名簿の字のまま）
+        def norm(rs):
+            return [dict(r, name=(r["name"] or "").translate(self.VARIANTS), _orig=r["name"]) for r in rs]
+        council = norm([r for r in self.roster if r["section"] in ("出席委員", "委員外議員", "出席議員")])
+        officials = norm([r for r in self.roster if r["section"] == "出席説明員"])
+        staff = norm([r for r in self.roster if r["section"] == "事務局職員"])
+        back = {}
+        for r in council + officials + staff:
+            back.setdefault(r["name"], r["_orig"])
+        for r in self.roster:
+            if r.get("name"):
+                r["name_key"] = r["name"].translate(self.VARIANTS)  # 「髙橋」「高橋」など字体の揺れをそろえた名前（同じ人の目印）
         cache = {}
         for sp in self.speeches:
             lb = sp["label"]
             if lb not in cache:
-                cache[lb] = self._resolve(lb, council, officials, staff)
+                res = self._resolve(lb.translate(self.VARIANTS), council, officials, staff)
+                if res.get("full_name"):
+                    res["name_key"] = res["full_name"].translate(self.VARIANTS)
+                if res.get("full_name") and res["full_name"] in back and back[res["full_name"]] != res["full_name"]:
+                    res["full_name"] = back[res["full_name"]]
+                    res["how"] = (res.get("how") or "") + "（異体字をそろえて照合）"
+                if "座長" in lb and res.get("full_name"):
+                    res["how"] = (res.get("how") or "") + "（座長は名簿に無いので名字で照合。要確認）"
+                cache[lb] = res
             sp["speaker"] = dict(cache[lb])
 
     def _resolve(self, label, council, officials, staff):
@@ -709,8 +756,15 @@ class Meeting:
                 return out
         # 講師・参考人（付議事件の欄に書かれた人）
         for r in [x for x in self.roster if x["section"].startswith("講師・参考人")]:
-            if lab.endswith(r["role"]) and lab[: -len(r["role"])] and r["name"].startswith(lab[: -len(r["role"])]):
+            rn = (r["name"] or "").translate(self.VARIANTS)
+            if r["name"] and lab.endswith(r["role"]) and lab[: -len(r["role"])] and rn.startswith(lab[: -len(r["role"])]):
                 out.update(full_name=r["name"], role=r["role"], kind="講師・参考人", how="付議事件の欄の講師・参考人と一致")
+                return out
+            # 「古村所長」のように講師の肩書（所長など）で呼ばれるとき：名字（2文字）が講師の名前と一致すれば（要確認）
+            if r["name"] and len(lab) > 2 and rn[:2] == lab[:2] and not any(
+                    (x.get("name") or "").translate(self.VARIANTS)[:2] == lab[:2] for x in council + officials):
+                out.update(full_name=r["name"], role=lab[2:], kind="講師・参考人",
+                           how="付議事件の欄の講師・参考人と名字で照合（呼び方が講師以外。要確認）")
                 return out
         # 理事者・事務局
         for group, kind in ((officials, "理事者"), (staff, "事務局")):
@@ -727,6 +781,8 @@ class Meeting:
 
     def _role_ok(self, r, role):
         rr = r["role"] or ""
+        if role == "座長":
+            return r["section"] in ("出席委員", "出席議員", "委員外議員")  # 名簿に「座長」の欄は無い。名字で照合する
         if role in ("委員", "理事"):
             return r["section"] == "出席委員" and rr in ("委員", "理事") or (
                 r["section"] == "委員外議員" and rr in ("委員", "議員"))
@@ -845,7 +901,7 @@ class Meeting:
     # ------------------------------------------------ 区切り（議題）の印
     MARKERS = [
         ("一般質問・終わり", re.compile(r"一般質問を(終了|終わ)")),
-        ("一般質問", re.compile(r"一般質問(に入ります|に入りたい|を行います|に移ります|に移りたい|を始め|は[０-９0-9一二三四五六七八九十]+件|ですが|のある)|(引き続き(まして)?、?)一般質問|^一般質問、|日程第[一二三四五六七八九十]+、一般質問")),
+        ("一般質問", re.compile(r"一般質問(に入ります|に入って(まいり|いき)|に入りたい|を行います|に移ります|に移りたい|を始め|は[０-９0-9一二三四五六七八九十]+件|ですが|のある)|(引き続き(まして)?、?)一般質問|^一般質問、|日程第[一二三四五六七八九十]+、一般質問")),
         ("総括質疑", re.compile(r"総括(説明に対する)?質疑(に入ります|を行います|を行いたい|に入りたい|から始め)")),
         ("款別質疑", re.compile(r"(歳入|歳出|[0-9０-９]+款)[^。]{0,60}?(の質疑に入ります|の質疑を行います|の質疑から始め|の質疑に入りたい|の審査に入ります)"
                                r"|[0-9０-９]+款[^。]{0,40}から[^。]{0,40}まで[^。]{0,40}(部分でございます|部分です|を審査|の質疑)")),
@@ -908,7 +964,7 @@ class Meeting:
                 if re.search(r"関連する理事者|理事者の出席|御出席", ns):
                     markers.append({**base, "kind": "理事者の出席", "opens": False})
                     continue
-                if re.search(r"一般質問を(終了|終わ)|一般質問は(以上|終わり|終了)", ns):
+                if re.search(r"一般質問を?(終了|終わ)|一般質問は(以上|終わり|終了)", ns):
                     markers.append({**base, "kind": "一般質問・終わり", "opens": False})
                     continue
                 if self.CLOSE_RE.search(ns):
@@ -921,6 +977,12 @@ class Meeting:
                     if kind in ("一般質問・終わり", "質疑の終わり"):
                         continue
                     if rx.search(ns):
+                        strong = re.search(r"(それでは|では|続いて|続きまして)、?一般質問(に入ります|に入って|に移ります|を始めます|を行います)", ns)
+                        if kind == "一般質問" and not strong and (re.search(r"(か|の)。?$|？|\?$", ns) or re.search(
+                                r"[0-9０-９一二三四五六七八九十]+時|めど|目途|ぐらいに|ごろ|頃|後ほど|その後|予定", ns)):
+                            kind = "一般質問の予告・問い合わせ"  # 「一般質問、あるの。」「11時20分をめどに入りたい」などは始まりではない
+                            markers.append({**base, "kind": kind, "opens": False})
+                            continue
                         opens = kind in self.OPENERS and (budget or kind not in ("態度表明", "採決"))
                         markers.append({**base, "kind": kind, "opens": opens})
         # 付議事件の件名（2段目・3段目と日程）が進行役の文に出たら、その議題の始まりの印
@@ -1097,10 +1159,23 @@ class Meeting:
         ends = [m for m in self.markers if m["kind"] == "一般質問・終わり"]
         gq["start_declarations"] = len(starts)
         gq["end_declarations"] = len(ends)
-        if not starts:
+        gq["notices"] = [m["wording"] for m in self.markers if m["kind"] == "一般質問の予告・問い合わせ"]
+        if not starts or self.committee_type() == "議会運営委員会":
             self.gq = gq
             return
-        s_seq = starts[0]["seq"]
+        # 始まり：宣言のあと、最初に話す（進行役でない）人が議員である宣言を選ぶ（予告と取り違えないため）
+        chosen = None
+        sp_by = {x["seq"]: x for x in self.speeches}
+        for st in starts:
+            nxt = next((sp_by[q] for q in range(st["seq"] + 1, st["seq"] + 4) if q in sp_by and not sp_by[q].get("is_presiding")), None)
+            if nxt is None or nxt["speaker"]["kind"] == "議員":
+                chosen = st
+                break
+        if chosen is None:
+            chosen = starts[0]
+            gq["needs_check_start"] = "宣言のすぐあとに議員の質問が見当たらない（始まりの位置は要確認）"
+        s_seq = chosen["seq"]
+        starts = [chosen] + [x for x in starts if x is not chosen]
         end_seq, end_kind = None, None
         e = [m for m in ends if m["seq"] > s_seq]
         if not self.is_committee:
@@ -1130,9 +1205,10 @@ class Meeting:
             nxt = [m for m in self.markers if m["seq"] > s_seq and m.get("opens") is not False
                    and m["kind"] in ("日程",) and not self.is_committee]
             if o:
-                end_seq, end_kind = o[0]["seq"], "②「その他」に入る宣言"
+                # 「その他」に入る宣言の発言は範囲の外（本会議の扱いとそろえる）
+                end_seq, end_kind = o[0]["seq"] - 1, "②「その他」に入る宣言（その発言は範囲の外）"
             elif c:
-                end_seq, end_kind = c[0]["seq"], "③閉会宣言"
+                end_seq, end_kind = c[0]["seq"] - 1, "③閉会宣言（その発言は範囲の外）"
             elif nxt:
                 end_seq, end_kind = nxt[0]["seq"], "次の日程"
             else:
@@ -1396,8 +1472,35 @@ class Meeting:
             sp["key"] = base + (f"#{seen[base]}" if seen[base] > 1 else "")
             sp["key_parts"] = {"meeting": meeting_id, "speaker_label": who, "head20_sha1": fp,
                                "dup_no": seen[base]}
-            sp["chars"] = len(sp["text"].replace("\n", ""))
-            sp["chars_nospace"] = len(nospace(sp["text"]))
+            # 文字数は原文の長さ（隠した部分・非公開の段落も原文の文字数で数える。表とト書きは数えない）
+            orig = self._orig_speech_text(sp)
+            sp["chars"] = len(orig.replace("\n", ""))
+            sp["chars_nospace"] = len(nospace(orig))
+            sp["chars_basis"] = "原文の文字数（隠した部分も含む。表・ト書きは含まない）"
+
+    def _orig_speech_text(self, sp):
+        stage_at = {}
+        for st in self.stage:
+            stage_at.setdefault(st["para"], set()).add(st["text"])
+        tbl = {p["para"] for p in self.paras if p["in_table"]}
+        lines = []
+        for q in range(sp["para_start"], sp["para_end"] + 1):
+            if q in tbl:
+                continue
+            for li, ln in enumerate((self._orig.get(q) or "").split("\n")):
+                if (q, li) < (sp["para_start"], sp.get("line_start", 0)) or (q, li) > (sp["para_end"], sp.get("line_end", 10 ** 6)):
+                    continue  # 1つの段落に複数の発言があるとき、この発言の行だけ
+                st = ln.strip(SP + " \t")
+                if not st or st in stage_at.get(q, set()) or SEP_LINE_RE.match(ln) or DOT_LINE_RE.match(ln) or parse_time(st):
+                    continue
+                lines.append(st)
+        if lines:
+            m = re.match(r"^○[\s　]*([^\s　]+)[\s　]+(.*)$", lines[0])
+            if m:
+                lines[0] = m.group(2).strip(SP + " ")
+            elif lines[0].startswith("○"):
+                lines[0] = lines[0][1 + len(sp["label"]):].strip(SP + " ")
+        return "\n".join(x for x in lines if x)
 
     # ------------------------------------------------ 原文の層
     def raw_layer(self):
@@ -1424,6 +1527,11 @@ class Meeting:
                 rec["in_table"] = p["in_table"]
             if q < header_end_para:
                 rec["part"] = "冒頭（名簿・付議事件）"
+            elif q in kind_of and q in sp_para and kind_of[q] in ("区切り線", "時刻", "ト書き"):
+                # 1つの段落の中に、発言の行と区切り線・時刻・ト書きの行が一緒にある
+                rec["part"] = "発言"
+                rec["seq"] = sp_para[q]
+                rec["also_contains"] = kind_of[q]
             elif q in kind_of:
                 rec["part"] = kind_of[q]
             elif q in sp_para:
@@ -1437,6 +1545,9 @@ class Meeting:
                 rec["chars"] = len(p["text"])
             else:
                 rec["text"] = p["text"]
+            if p.get("masked_representatives"):
+                rec["partly_withheld"] = {"reason": "契約の相手方の代表者の氏名・個人の住所氏名", "count": p["masked_representatives"],
+                                          "orig_chars": len(self._orig.get(q) or "")}
             if p["text"] != p["ptext"]:
                 rec["ptext_differs"] = True
                 rec["ptext_missing_chars"] = len(p["text"]) - len(p["ptext"])
@@ -1484,44 +1595,130 @@ def ref_form(w):
 
 REP_CONTEXT = r"相手方|代表者|構成員|共同企業体|指定管理者|受注者|契約"
 REP_TITLE = (r"(?:代表取締役(?:社長|会長|専務)?|取締役(?:社長|会長|支店長|副社長)?|執行役員(?:支店長|支社長|本店長)?|常務執行役員"
-             r"|代表執行役(?:社長)?|代表社員|代表理事|理事長|代表者|本店長|支店長|支社長|営業所長|事業所長|所長|社長|会長|代表)")
+             r"|代表執行役(?:社長)?|代表社員|代表理事|理事長|代表者|本店長|支店長|支社長|営業所長|事業所長|所長|社長|会長|代表"
+             # 広く取る：「取締役常務執行役員支社長」「取締役乗務執行役員…」（誤記）なども、語尾で肩書とみなす
+             r"|[一-龥]{0,12}(?:取締役|執行役員|役員|支社長|支店長|本店長|所長|社長|会長|理事長|部長|局長|店長|長))")
+TITLE_HEAD_RE = re.compile(r"取締役|執行役員|常務|専務|乗務|代表|社長|会長|理事|支社長|支店長|本店長|営業所長|所長|局長|部長|店長|役員")
 REP_NAME = r"[一-龥々〆ヶァ-ヶ](?:[\s　]?[一-龥々〆ヶぁ-んァ-ヶー]){1,7}?"
 REP_RE = re.compile(r"(" + REP_TITLE + r")([\s　]*、?[\s　]*)(" + REP_NAME + r")(?=でございます|です|で、|で以下|。|、|，|）|\)|$|[\s　]*$)")
-COMPANY_RE = re.compile(r"株式会社|有限会社|合同会社|合資会社|共同企業体|法人|組合|協会|事業団|センター")
+COMPANY_RE = re.compile(r"株式会社?|有限会社|合同会社|合資会社|会社|共同企業体|共同事業体|法人|組合|協会|事業団|センター|工務店")
+PUBLIC_RE = re.compile(r"区長|市長|町長|村長|知事|局長|大臣|契約担当官|[都道府県区市町村]$|国土交通省|財務局|整備局|公社|機構")
 ADDRESS_RE = re.compile(r"^(東京都|〒|北海道|大阪府|京都府|.{2,3}県)|[都道府県].{0,6}[区市町村]|[区市町村].{0,12}(丁目|番地|番|号)")
 
 
-def mask_representatives(text):
-    """契約の相手方の文の中で、代表者などの肩書のあとの人名を「［非公開：代表者の氏名］」に置き換える。
+# 公の機関（区長・国の局長など）の代表者の名前を隠すか（先生の判断待ち。それまでは False＝残す。True にすると隠す）
+MASK_PUBLIC_REPRESENTATIVES = False
+TITLE_END_RE = re.compile(r"代表取締役|取締役|執行役員|役員|代表社員|代表理事|理事長|代表者|代表|社長|会長|支社長|支店長|本店長|所長|局長|部長|店長|長")
 
+
+def mask_representatives(text):
+    """契約の相手方の文の中で、代表者の肩書のあとの人名を「［非公開：代表者の氏名］」に置き換える（v0.3.5 で作り直し）。
+
+    決まり（検査の指摘を受けて）：
+    - 肩書は「…取締役」「…役員」「…長」「代表」などの語尾で取る。肩書のすぐあとの「、」までのかたまりが、
+      また肩書（「東京本社代表」など）なら、それも肩書として、その次のかたまりを名前とみなす。
+    - 名前らしさ：空白を除いて2〜6文字、漢字かカタカナだけ（ひらがなを含まない）、肩書や会社の語で終わらない、
+      「団体」「時間」「限度」などの一般の語でない。
+    - 企業名（株式会社・共同企業体など）が、肩書と同じかたまりか、同じ文の直前のかたまりにあるときだけ対象にする。
+      （企業名を拾えないときは、「相手方は」「代表者は」「構成員は」の文の中の、はっきりした会社の肩書だけ対象）
+    - 公の機関（区長・国の局長など）の代表者の名前は、設定 MASK_PUBLIC_REPRESENTATIVES が False のあいだは残す。
     企業名・共同企業体名・指定管理者の団体名・所在地は残す（企業の情報）。
-    契約の相手方の文（「相手方」「代表者」「構成員」など）を含む段落だけを対象にする。
-    返り値：(置き換えた文, [{company, address, title}...])
+    返り値：(置き換えた文, [{company, address, title, ...}])
     """
     if not text or not re.search(REP_CONTEXT, text):
         return text, []
     parties = []
     out, pos = [], 0
-    for m in REP_RE.finditer(text):
-        # 直前の「、」区切りのかたまりから、企業名と所在地を拾う（なければ空欄。推測しない）
-        name = m.group(3)
-        if name.startswith("者") or re.search(r"[はがのをにでともへ]$", nospace(name)):
-            continue  # 「代表者は」の「者は」などは人名ではない
-        # 企業名・所在地は、すでに隠した後の文から拾う（前の人の名前が混ざらないように）
-        head = ("".join(out) + text[pos:m.start()])[-120:]
-        chunks = [c.strip(SP + " ") for c in re.split(r"[、，。\n]", head) if c.strip(SP + " ")]
-        company = next((re.sub(REP_TITLE + r"$", "", c) for c in reversed(chunks[-3:]) if COMPANY_RE.search(c)), "")
-        company = re.sub(r"^.*?(相手方|代表者|構成員)は、?", "", company)
-        address = next((c for c in reversed(chunks[-4:]) if ADDRESS_RE.search(c) and not COMPANY_RE.search(c)), "")
-        address = re.sub(r"^.*?(相手方|代表者|構成員)は、?", "", address)
-        if not company:
-            continue  # 企業名が見つからない肩書（「区長」の言い換えなど）には手を付けない
-        out.append(text[pos:m.start(3)])
-        out.append("［非公開：代表者の氏名］")
-        pos = m.end(3)
-        parties.append({"company": company, "address": address, "title": m.group(1)})
+    i = 0
+    n = len(text)
+    while True:
+        m = TITLE_END_RE.search(text, i)
+        if not m:
+            break
+        i = m.end()
+        # 肩書のかたまり：直前の区切り（、。空白・記号）から、この肩書の語の終わりまで
+        blk_start = m.start()
+        while blk_start > 0 and re.match(r"[一-龥々〆ヶァ-ヶー・Ａ-Ｚａ-ｚA-Za-z0-9０-９]", text[blk_start - 1]):
+            blk_start -= 1
+        if re.match(r"^[\s　]*○[\s　]*$", text[:blk_start].split("\n")[-1]):
+            continue  # 「○大塚保健サービスセンター所長　…」は発言者の表記
+        block = text[blk_start:m.end()]
+        th = TITLE_HEAD_RE.search(block)
+        tstart = blk_start + (th.start() if th else 0)
+        title = text[tstart:m.end()]
+        prefix = text[blk_start:tstart]
+        # 肩書のあとのかたまりを順に見る（肩書が「、」で続く場合は、その次）
+        j = m.end()
+        name_span = None
+        for _ in range(3):
+            k = j
+            while k < n and text[k] in "、　 ":
+                k += 1
+            mm = re.match(r"([^、。，\n）\)]{1,12}?)(?=でございます|です|で、|で以下|。|、|，|）|\)|\n|$)", text[k:])
+            if not mm:
+                break
+            cand = mm.group(1)
+            c = nospace(cand)
+            if TITLE_END_RE.search(c) and re.search(r"(" + TITLE_END_RE.pattern + r")$", c) or re.search(r"本社|支社|支店|本店|事業所|営業所", c):
+                title += "、" + cand if text[j:k].strip("　 ") else cand
+                j = k + mm.end()
+                continue  # 「常務取締役、東京本社代表、（名前）」の「東京本社代表」は肩書
+            name_span = (k, k + len(cand))
+            break
+        if not name_span:
+            continue
+        name = nospace(text[name_span[0]:name_span[1]])
+        if not (2 <= len(name) <= 6) or re.search(r"[ぁ-ん]", name) or re.search(r"(長|官|者|事|員|役|社|店|体|内|等|中)$", name) \
+                or re.search(r"団体|時間|限度|会社|株式|法人|組合|以下|構成|記載|代表|部分|全体", name):
+            continue
+        # 企業名：肩書と同じかたまりの頭（prefix）か、同じ文の直前のかたまり
+        sent_start = max(text.rfind("。", 0, blk_start), text.rfind("\n", 0, blk_start)) + 1
+        sent_head = text[sent_start:blk_start]
+        chunks = [x.strip(SP + " ") for x in re.split(r"[、，]", sent_head) if x.strip(SP + " ")]
+        if prefix and COMPANY_RE.search(prefix):
+            company = prefix
+        elif chunks and COMPANY_RE.search(chunks[-1]):
+            company = chunks[-1]
+        else:
+            company = ""
+        company = re.sub(r"^.*?(相手方|代表者|構成員|構成委員)は、?", "", company)
+        address = next((x for x in reversed(chunks[-4:]) if ADDRESS_RE.search(x) and not COMPANY_RE.search(x)), "")
+        address = re.sub(r"^.*?(相手方|代表者|構成員|構成委員)は、?", "", address)
+        public = bool(PUBLIC_RE.search(title) or PUBLIC_RE.search(prefix) or (chunks and PUBLIC_RE.search(chunks[-1])))
+        if public:
+            if not MASK_PUBLIC_REPRESENTATIVES:
+                continue  # 公の機関の代表者（公職の名前）は、先生の判断が出るまで残す
+            label = "［非公開：公の機関の代表者の氏名］"
+        else:
+            if not company:
+                if not (re.search(r"相手方は|代表者は|構成員は|構成委員は", sent_head) and re.search(
+                        r"代表取締役|取締役|代表社員|代表理事|理事長|支店長|本店長|支社長|執行役員", title)):
+                    continue
+            label = "［非公開：代表者の氏名］"
+        out.append(text[pos:name_span[0]])
+        out.append(label)
+        pos = name_span[1]
+        i = name_span[1]
+        parties.append({"company": company, "address": address, "title": title, "public": public,
+                        "note": "" if company else ("公の機関" if public else "企業名を拾えなかった（原文の誤字など。要確認）")})
     out.append(text[pos:])
-    return "".join(out), parties
+    text2 = "".join(out)
+    # 契約の相手方が個人（企業名も公の機関もない）のときは、相手方の住所・氏名を丸ごと隠す
+    out2, pos2 = [], 0
+    for m in re.finditer(r"(契約の相手方は、?|相手方は、?)([^。]{2,160}?)(でございます|です)", text2):
+        body = m.group(2)
+        if "［非公開" in body or COMPANY_RE.search(body) or PUBLIC_RE.search(body) or re.search(
+                r"[都道府県区市町村]、|国|省|庁|大学|学校|連合|協議会|東京都[^一-龥]|東京都$|一部事務組合|団体", body):
+            continue
+        if not re.search(r"丁目|番地|番|号|[一-龥]{2,}[\s　]?[一-龥]{1,3}$", body):
+            continue
+        out2.append(text2[pos2:m.start(2)])
+        out2.append("［非公開：契約の相手方（個人）の住所・氏名］")
+        pos2 = m.end(2)
+        parties.append({"company": "", "address": "", "title": "", "individual": True,
+                        "note": "契約の相手方が個人（住所・氏名を隠した）"})
+    out2.append(text2[pos2:])
+    return "".join(out2), parties
 
 
 def _bigrams(s):

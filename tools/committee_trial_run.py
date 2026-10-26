@@ -103,7 +103,8 @@ def contract_parties(m):
                 break
         s = sec.get(sp.get("section_id")) if sp else None
         out.append({"company": x["company"], "address": x["address"], "representative_title": x["title"],
-                    "representative_name": "［非公開：代表者の氏名］", "para": x["para"],
+                    "representative_name": None if x.get("individual") else "［非公開：代表者の氏名］",
+                    "individual": bool(x.get("individual")), "note": x.get("note", ""), "para": x["para"],
                     "seq": sp["seq"] if sp else None, "bill_nearby": bill,
                     "section_refs": s["refs"] if s else []})
     # 代表者の名前が出てこない相手方（共同企業体・指定管理者の団体など）も企業名を残す
@@ -135,7 +136,7 @@ def contract_parties(m):
     return out
 
 
-def run_one(name, drive_path, reason, copy_dir=None, conv_dir=None):
+def run_one(name, drive_path, reason, copy_dir=None, conv_dir=None, date_hint=None):
     copy_dir = copy_dir or COPY
     conv_dir = conv_dir or CONV
     src_copy = os.path.join(copy_dir, name)
@@ -174,6 +175,21 @@ def run_one(name, drive_path, reason, copy_dir=None, conv_dir=None):
     date_check = None
     if date_iso and name_date:
         date_check = "一致" if date_iso[5:] == name_date[5:] and (name_date[:4] == "????" or name_date[:4] == date_iso[:4]) else f"食い違い（ファイル名 {name_date}）"
+    if not date_iso:
+        # 本文の日付が読めない（「令和９月１７日」のように年が抜けているなど）→ ファイル名・フォルダ名の日付で補い、要確認の印
+        hint = date_hint or (name_date if name_date and "?" not in name_date else None)
+        if hint:
+            date_iso = hint
+            date_src = "本文の日付が読めないため、ファイル名・フォルダ名の日付で補った（要確認）"
+            date_check = "本文の日付なし（要確認）"
+            m.issues.append(f"会議の日付：本文「{m.date_text}」から読めず、ファイル名などの日付 {hint} で補った（要確認）")
+    # 分冊：会議録の題名に①②がなくても、ファイル名に①②があれば分冊として扱う（重複と取り違えない）
+    vol_src = "会議録の題名" if m.volume else None
+    if not m.volume:
+        fv = re.search(r"[①②③④⑤]", os.path.basename(drive_path))
+        if fv:
+            m.volume = fv.group(0)
+            vol_src = "ファイル名"
 
     body = "委員会" if m.is_committee else "本会議"
     meeting_id = f"{body}:{m.committee_name or '本会議'}:{date_iso}" + (f":{m.volume}" if m.volume else "")
@@ -194,7 +210,7 @@ def run_one(name, drive_path, reason, copy_dir=None, conv_dir=None):
         "meeting": {
             "meeting_id": meeting_id, "body": body, "title_raw": m.title_raw,
             "committee_name": m.committee_name, "committee_type": m.committee_type(),
-            "volume": m.volume, "date_iso": date_iso, "date_text": m.date_text, "date_source": date_src,
+            "volume": m.volume, "volume_source": vol_src, "date_iso": date_iso, "date_text": m.date_text, "date_source": date_src,
             "date_in_filename": name_date, "date_filename_rule": name_rule, "date_check": date_check,
             "place": m.place, "session": session_from_name(drive_path, m.is_committee),
             "budget_review_parts": budget_kinds,
@@ -211,7 +227,7 @@ def run_one(name, drive_path, reason, copy_dir=None, conv_dir=None):
         "stage_directions": m.stage,
         "petition_documents": [it for it in m.items if it["kind"] == "請願文書表"],
         "appendix": [it for it in m.items if it["kind"] == "付属資料"],
-        "personal_info_withheld": m.withheld,
+        "personal_info_withheld": m.withheld + m.partial_withheld,
         "contract_parties": contract_parties(m),
         "format_issues": m.issues,
         "speeches": m.speeches,
@@ -307,14 +323,16 @@ def key_simulation(results):
     return out
 
 
-def write_set(results, out_dir, title, dups=None):
+def write_set(results, out_dir, title, dups=None, write_json=True):
     os.makedirs(out_dir, exist_ok=True)
     with open(os.path.join(out_dir, "目録.csv"), "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
         w.writerow(["試しの名前", "元の場所", "形式", "変換", "sha256（元）", "会議", "委員会名", "委員会の種類",
                     "分冊", "日付", "日付の取り方", "ファイル名の日付と", "重複の判定", "選んだ理由"])
         sha = Counter(r["file"]["sha256_source"] for r in results)
-        texts = {r["file"]["trial_name"]: "\n".join((p["text"] or "") for p in r["raw_paragraphs"]) for r in results}
+        import hashlib
+        texts = {r["file"]["trial_name"]: (r.get("_text_sha") or hashlib.sha256(
+            "\n".join((p["text"] or "") for p in r["raw_paragraphs"]).encode("utf-8")).hexdigest()) for r in results}
         for r in results:
             fm, mt = r["file"], r["meeting"]
             same_text = [n for n, t in texts.items() if n != fm["trial_name"] and t == texts[fm["trial_name"]]]
@@ -340,6 +358,8 @@ def write_set(results, out_dir, title, dups=None):
                         mt["volume"] or "", mt["date_iso"], mt["date_source"], mt["date_check"], dup,
                         fm["selected_because"]])
     for r in results:
+        if not write_json:
+            continue
         stem = os.path.splitext(r["file"]["trial_name"])[0]
         with open(os.path.join(out_dir, f"{stem}.json"), "w", encoding="utf-8") as f:
             json.dump(r, f, ensure_ascii=False, indent=1)
