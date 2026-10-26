@@ -402,6 +402,8 @@ def title_evidence_text(it):
     parts = [f"{f}{n}（" + "・".join(f"{w}{c}" for w, c in ev["hits"].get(f, {}).items()) + "）"
              for f, n in ev.get("totals", {}).items()]
     out = ev.get("rule", "") + ("：" + "、".join(parts) if parts else "")
+    if ev.get("not_counted"):
+        out += "／数えない言葉（役職・課・機関の名前）：" + "・".join(f"{w}{c}" for w, c in ev["not_counted"].items())
     if ev.get("answer_rejected"):
         out += f"／答弁の前置き「{ev['answer_rejected']}」は宛名などで使わず"
     return out

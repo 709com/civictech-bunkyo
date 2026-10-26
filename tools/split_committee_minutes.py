@@ -1368,7 +1368,8 @@ class Meeting:
             rejected = wording
         # ③ 質問者の発言の本文の言葉から分野を推定
         est = estimate_field("\n".join(sp_text.get(q, "") for q in it["question_seqs"]))
-        ev = {"field": est["field"], "rule": est["rule"], "totals": est["totals"], "hits": est["hits"]}
+        ev = {"field": est["field"], "rule": est["rule"], "totals": est["totals"], "hits": est["hits"],
+              "not_counted": est["not_counted"]}
         if rejected:
             ev["answer_rejected"] = rejected  # 宛名だけなど、項目名にしなかった答弁の前置き
         it["title_evidence"] = ev
@@ -1900,7 +1901,9 @@ def extract_answer_title(text, limit=200):
 # 分野と言葉の一覧（辞書）。1つの言葉は1つの分野にだけ置く。長い言葉から先に当て、重ねて数えない。
 # 初期セットは 9章の政策タグ案（子育て・教育・防災・まちづくり・DX・福祉・環境・財政）。
 # 足した3分野：保健・医療（健診・衛生・出生率の質問が子育て・福祉に混ざるため）、
-# 文化・スポーツ（図書館・運動施設・観劇の質問の受け皿）、地域・区民活動（町会・自治会の質問の受け皿）。
+# 文化・スポーツ（図書館・運動施設・観劇の質問の受け皿）、地域・区民活動（町会・自治会の質問の受け皿）、
+# 区政運営（公文書・職員・特別職などの質問の受け皿。2026-10-27 秘書の指示で追加）。
+# 「学習支援」「学習・生活支援」は困っている家庭への支援なので福祉に置く（教育の「学習」より長いので先に当たる）。
 FIELD_WORDS = {
     "子育て": ["子育て", "保育園", "保育所", "保育室", "保育士", "保育", "待機児童", "育成室", "児童館", "幼稚園", "出産",
             "妊娠", "妊婦", "乳幼児", "子ども家庭支援", "児童相談所", "児相", "子ども食堂", "こども食堂", "放課後",
@@ -1918,7 +1921,7 @@ FIELD_WORDS = {
            "電子", "マイナンバー", "ＡＩ", "ＩＣＴ", "ICT", "キャッシュレス", "ポータルサイト", "メール", "ＬＩＮＥ", "タブレット"],
     "福祉": ["福祉", "障害", "高齢者", "高齢", "介護", "生活保護", "生活困窮", "貧困", "手話", "意思疎通", "認知症",
            "地域包括", "放課後等デイサービス", "医療的ケア", "生活支援", "重層的支援", "合理的配慮", "ひとり暮らし",
-           "単身", "バリアフリー", "小規模多機能", "要配慮"],
+           "単身", "バリアフリー", "小規模多機能", "要配慮", "学習支援", "学習・生活支援"],
     "環境": ["環境", "脱炭素", "ごみ", "ゴミ", "リサイクル", "温暖化", "気候", "省エネ", "再生可能エネルギー", "みどり",
            "樹木", "樹林", "暑さ対策", "猛暑", "熱中症", "騒音", "プラスチック", "公害", "ＣＯ２", "CO2", "空調", "エアコン"],
     "財政": ["財政", "予算", "決算", "基金", "歳入", "歳出", "区税", "税収", "住民税", "税金", "区債", "補助金", "交付金",
@@ -1929,11 +1932,34 @@ FIELD_WORDS = {
                 "観光", "祭り", "博物館", "美術館", "万博", "運動公園", "体育施設"],
     "地域・区民活動": ["町会", "自治会", "地域活動", "ＮＰＯ", "NPO", "ボランティア", "商店街", "協働", "地域振興",
                 "区民センター", "コミュニティ"],
+    "区政運営": ["公文書", "文書管理", "職員", "特別職", "一般職", "兼職", "行政改革", "組織", "人事", "人材育成",
+             "人手不足", "定数", "情報公開", "苦情", "ハラスメント", "庁舎", "区長選挙", "例規"],
 }
 FIELD_ORDER = list(FIELD_WORDS)
 _W2F = {w: f for f, ws in FIELD_WORDS.items() for w in ws}
 assert len(_W2F) == sum(len(ws) for ws in FIELD_WORDS.values()), "同じ言葉が2つの分野に入っている"
 FIELD_RE = re.compile("|".join(re.escape(w) for w in sorted(_W2F, key=len, reverse=True)))
+# 数えない言葉：役職・課や部・機関・委員会の名前の中の言葉（「教育長」「防災課長」「災害対策調査特別委員会」の
+# 「教育」「防災」「災害」など）。話題ではなく、相手や場所を呼んでいるだけなので、分野を数える前に外す。
+# 「子育て支援課」のように、ひらがなを含む名前は形で拾えないので、名前を並べて持つ。
+NOT_COUNTED_NAMES = ["教育長", "教育委員会", "教育委員", "子育て支援課", "子育て支援部", "子ども家庭部", "子ども施設担当課"]
+NOT_COUNTED_RE = re.compile(
+    "|".join(re.escape(w) for w in sorted(NOT_COUNTED_NAMES, key=len, reverse=True)) +
+    r"|[一-龥ァ-ヶー・]{1,20}?(?:担当課長|担当部長|課長|部長|局長|室長|所長|委員会|審議会|協議会|課|部|局)(?![題活分品門屋材位])")
+
+
+def blank_not_counted(text):
+    """数えない言葉（役職・課・機関の名前のうち、一覧の言葉を含むもの）を空白に置き換える。返り値：(文, {名前: 回数})"""
+    out, cnt, last = [], Counter(), 0
+    for m in NOT_COUNTED_RE.finditer(text):
+        if not FIELD_RE.search(m.group(0)):
+            continue
+        out.append(text[last:m.start()])
+        out.append("　" * len(m.group(0)))
+        cnt[m.group(0)] += 1
+        last = m.end()
+    out.append(text[last:])
+    return "".join(out), cnt
 
 
 def estimate_field(text):
@@ -1941,15 +1967,18 @@ def estimate_field(text):
     決まり：言葉が当たった回数の合計が最も多い分野を採る。
       - 合計が同点のときは、当たった言葉の種類の数が多い方。それも同点なら決めない（空欄。推測で埋めない）。
       - どの言葉も当たらなければ空欄。
+      - 役職・課・機関の名前の中の言葉（「教育長」の「教育」など）は数えない（not_counted に残す）。
     返り値：{"field", "hits": {分野: {言葉: 回数}}, "totals", "rule"}（field が "" なら空欄）
     """
     hits = {}
+    text, ignored = blank_not_counted(text)
     for m in FIELD_RE.finditer(text):
         w = m.group(0)
         hits.setdefault(_W2F[w], Counter())[w] += 1
     totals = {f: sum(c.values()) for f, c in hits.items()}
     res = {"field": "", "hits": {f: dict(c.most_common()) for f, c in hits.items()},
-           "totals": dict(sorted(totals.items(), key=lambda x: (-x[1], FIELD_ORDER.index(x[0]))))}
+           "totals": dict(sorted(totals.items(), key=lambda x: (-x[1], FIELD_ORDER.index(x[0])))),
+           "not_counted": dict(ignored.most_common())}
     if not totals:
         res["rule"] = "言葉が1つも当たらない（空欄）"
         return res
