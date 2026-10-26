@@ -83,6 +83,58 @@ def date_from_name(drive_path):
     return None, None
 
 
+def contract_parties(m):
+    """契約の相手方の企業名・所在地（代表者の氏名は隠したうえで）を、どの発言・どの議案かと一緒に残す。"""
+    sp_of = {}
+    for sp in m.speeches:
+        for q in range(sp["para_start"], sp["para_end"] + 1):
+            sp_of.setdefault(q, sp)
+    sec = {s["id"]: s for s in m.sections}
+    text_of = {p["para"]: p["text"] for p in m.paras}
+    out = []
+    for x in m.contract_parties:
+        sp = sp_of.get(x["para"])
+        # 同じ段落か、前の5段落のうちいちばん近い「議案第◯号」
+        bill = None
+        for q in range(x["para"], max(-1, x["para"] - 6), -1):
+            refs = re.findall(r"議案第[\s　]*([0-9０-９〇一二三四五六七八九十百]+)号", text_of.get(q, ""))
+            if refs:
+                bill = "議案第" + str(kan2int(refs[-1]) if kan2int(refs[-1]) is not None else refs[-1]) + "号"
+                break
+        s = sec.get(sp.get("section_id")) if sp else None
+        out.append({"company": x["company"], "address": x["address"], "representative_title": x["title"],
+                    "representative_name": "［非公開：代表者の氏名］", "para": x["para"],
+                    "seq": sp["seq"] if sp else None, "bill_nearby": bill,
+                    "section_refs": s["refs"] if s else []})
+    # 代表者の名前が出てこない相手方（共同企業体・指定管理者の団体など）も企業名を残す
+    have = {(x["para"], x["company"]) for x in m.contract_parties}
+    for p in m.paras:
+        if not p["text"]:
+            continue
+        for mm in re.finditer(r"(?:契約の相手方は|相手方は|指定管理者に)、?([^。]{2,80}?)(?:でございます|です|を指定)", p["text"]):
+            body = mm.group(1)
+            if "［非公開" in body or not re.search(r"株式会社|有限会社|合同会社|共同企業体|共同事業体|法人|組合|協会|プロジェクト|センター|事業団", body):
+                continue
+            parts = [c.strip(SP if False else "　 ") for c in re.split(r"[、，]", body) if c.strip("　 ")]
+            company = next((c for c in reversed(parts) if not re.search(r"(丁目|番地|号)$", c)), body)
+            address = next((c for c in parts if re.search(r"(丁目|番地|番|号)", c) and c != company), "")
+            if (p["para"], company) in have:
+                continue
+            have.add((p["para"], company))
+            sp = sp_of.get(p["para"])
+            bill = None
+            for q in range(p["para"], max(-1, p["para"] - 6), -1):
+                refs = re.findall(r"議案第[\s　]*([0-9０-９〇一二三四五六七八九十百]+)号", text_of.get(q, ""))
+                if refs:
+                    bill = "議案第" + str(kan2int(refs[-1]) if kan2int(refs[-1]) is not None else refs[-1]) + "号"
+                    break
+            s = sec.get(sp.get("section_id")) if sp else None
+            out.append({"company": company, "address": address, "representative_title": None,
+                        "representative_name": None, "para": p["para"], "seq": sp["seq"] if sp else None,
+                        "bill_nearby": bill, "section_refs": s["refs"] if s else []})
+    return out
+
+
 def run_one(name, drive_path, reason, copy_dir=None, conv_dir=None):
     copy_dir = copy_dir or COPY
     conv_dir = conv_dir or CONV
@@ -160,6 +212,7 @@ def run_one(name, drive_path, reason, copy_dir=None, conv_dir=None):
         "petition_documents": [it for it in m.items if it["kind"] == "請願文書表"],
         "appendix": [it for it in m.items if it["kind"] == "付属資料"],
         "personal_info_withheld": m.withheld,
+        "contract_parties": contract_parties(m),
         "format_issues": m.issues,
         "speeches": m.speeches,
         "raw_paragraphs": m.raw_layer(),

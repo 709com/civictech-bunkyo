@@ -18,7 +18,7 @@ from collections import Counter, OrderedDict
 from committee_docx_text import read_document
 
 TOOL_NAME = "split_committee_minutes.py"
-TOOL_VERSION = "0.3.1 (2026-10-26 3回目の検査の指摘を反映)"
+TOOL_VERSION = "0.3.2 (2026-10-27 契約の相手方の代表者の氏名を隠す)"
 
 SP = "　"
 DIG = str.maketrans("０１２３４５６７８９", "0123456789")
@@ -158,6 +158,17 @@ class Meeting:
     # ------------------------------------------------ 読み込み
     def load(self):
         paras, n_pd, n_tbl = read_document(self.path)
+        # 契約の相手方の代表者の氏名を、読み込んだ直後に段落の中で隠す（企業名・所在地は残す。2026-10-27 先生の決定）
+        self.contract_parties = []
+        for p in paras:
+            masked, parties = mask_representatives(p["text"])
+            if parties:
+                p["text"] = masked
+                p["ptext"] = mask_representatives(p["ptext"])[0]
+                p["masked_representatives"] = len(parties)
+                for x in parties:
+                    x["para"] = p["para"]
+                    self.contract_parties.append(x)
         self.paras = paras
         self.n_pd, self.n_tbl = n_pd, n_tbl
         # 行の単位（段落の中のソフト改行も1行）
@@ -1469,6 +1480,48 @@ def ref_form(w):
     w2 = re.sub(r"[0-9０-９]+", "N", w)
     w2 = re.sub(r"[「『][^」』]*[」』]", "「件名」", w2)
     return w2
+
+
+REP_CONTEXT = r"相手方|代表者|構成員|共同企業体|指定管理者|受注者|契約"
+REP_TITLE = (r"(?:代表取締役(?:社長|会長|専務)?|取締役(?:社長|会長|支店長|副社長)?|執行役員(?:支店長|支社長|本店長)?|常務執行役員"
+             r"|代表執行役(?:社長)?|代表社員|代表理事|理事長|代表者|本店長|支店長|支社長|営業所長|事業所長|所長|社長|会長|代表)")
+REP_NAME = r"[一-龥々〆ヶァ-ヶ](?:[\s　]?[一-龥々〆ヶぁ-んァ-ヶー]){1,7}?"
+REP_RE = re.compile(r"(" + REP_TITLE + r")([\s　]*、?[\s　]*)(" + REP_NAME + r")(?=でございます|です|で、|で以下|。|、|，|）|\)|$|[\s　]*$)")
+COMPANY_RE = re.compile(r"株式会社|有限会社|合同会社|合資会社|共同企業体|法人|組合|協会|事業団|センター")
+ADDRESS_RE = re.compile(r"^(東京都|〒|北海道|大阪府|京都府|.{2,3}県)|[都道府県].{0,6}[区市町村]|[区市町村].{0,12}(丁目|番地|番|号)")
+
+
+def mask_representatives(text):
+    """契約の相手方の文の中で、代表者などの肩書のあとの人名を「［非公開：代表者の氏名］」に置き換える。
+
+    企業名・共同企業体名・指定管理者の団体名・所在地は残す（企業の情報）。
+    契約の相手方の文（「相手方」「代表者」「構成員」など）を含む段落だけを対象にする。
+    返り値：(置き換えた文, [{company, address, title}...])
+    """
+    if not text or not re.search(REP_CONTEXT, text):
+        return text, []
+    parties = []
+    out, pos = [], 0
+    for m in REP_RE.finditer(text):
+        # 直前の「、」区切りのかたまりから、企業名と所在地を拾う（なければ空欄。推測しない）
+        name = m.group(3)
+        if name.startswith("者") or re.search(r"[はがのをにでともへ]$", nospace(name)):
+            continue  # 「代表者は」の「者は」などは人名ではない
+        # 企業名・所在地は、すでに隠した後の文から拾う（前の人の名前が混ざらないように）
+        head = ("".join(out) + text[pos:m.start()])[-120:]
+        chunks = [c.strip(SP + " ") for c in re.split(r"[、，。\n]", head) if c.strip(SP + " ")]
+        company = next((re.sub(REP_TITLE + r"$", "", c) for c in reversed(chunks[-3:]) if COMPANY_RE.search(c)), "")
+        company = re.sub(r"^.*?(相手方|代表者|構成員)は、?", "", company)
+        address = next((c for c in reversed(chunks[-4:]) if ADDRESS_RE.search(c) and not COMPANY_RE.search(c)), "")
+        address = re.sub(r"^.*?(相手方|代表者|構成員)は、?", "", address)
+        if not company:
+            continue  # 企業名が見つからない肩書（「区長」の言い換えなど）には手を付けない
+        out.append(text[pos:m.start(3)])
+        out.append("［非公開：代表者の氏名］")
+        pos = m.end(3)
+        parties.append({"company": company, "address": address, "title": m.group(1)})
+    out.append(text[pos:])
+    return "".join(out), parties
 
 
 def _bigrams(s):
