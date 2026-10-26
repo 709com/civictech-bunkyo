@@ -26,13 +26,13 @@ export function About() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
             <h3 className="text-2xl font-bold leading-[43.2px]">
-              区議会での議論を
+              本会議の一般質問を、
               <br />
-              できる限りわかりやすく
+              原文に戻れる形で
             </h3>
             <p className="text-[15px] leading-[28px] text-black">
-              {siteConfig.siteName}は、{siteConfig.siteDescription}
-              。区民の意見を政治に届けることを目指して、継続的にアップデートしていきます。
+              {siteConfig.siteName}
+              は、文京区議会の本会議の一般質問を、会議録から抜き出して登壇順に掲載する議会報告サイトです。正確な表現は、公式の会議録をご確認ください。
             </p>
           </div>
 
