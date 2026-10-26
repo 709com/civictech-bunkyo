@@ -51,7 +51,7 @@ export function DesktopMenuLinks() {
           lineHeight: "1.48em",
         }}
       >
-        © 2025 {siteConfig.operator.name}
+        © 2026 {siteConfig.operator.name}
       </p>
     </div>
   );
