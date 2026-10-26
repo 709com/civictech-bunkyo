@@ -1,0 +1,851 @@
+{
+ "about": "委員会・本会議の会議録の分解の確認表（戻り防止）。これまでの検査で見つかった事例を、会議（ファイル名の頭）・段落番号・期待する結果で書く。人名そのものは入れない。作り直すたびに tools/committee_regression_check.py で全部を確かめる。",
+ "cases": [
+  {
+   "id": "P01",
+   "set": "trial",
+   "file": "01_H23総務0224",
+   "check": "para_masks",
+   "para": 250,
+   "min": 3,
+   "why": "執行役員支店長、氏名。（句点で終わる）も隠す（v0.3.4 で戻った）"
+  },
+  {
+   "id": "P02",
+   "set": "trial",
+   "file": "01_H23総務0224",
+   "check": "para_withheld",
+   "paras": [
+    584,
+    585
+   ],
+   "why": "請願者の欄"
+  },
+  {
+   "id": "P03",
+   "set": "trial",
+   "file": "06_R7文教0929①",
+   "check": "para_withheld",
+   "paras": [
+    139,
+    140,
+    141
+   ],
+   "why": "請願者の欄"
+  },
+  {
+   "id": "P04",
+   "set": "trial",
+   "file": "A6_R5本会議0608",
+   "check": "para_masks",
+   "para": 508,
+   "min": 1,
+   "why": "代表取締役のあとの氏名"
+  },
+  {
+   "id": "P05",
+   "set": "trial",
+   "file": "A6_R5本会議0608",
+   "check": "para_masks",
+   "para": 573,
+   "min": 1,
+   "why": "取締役支店長のあとの氏名（読点なし）"
+  },
+  {
+   "id": "P06",
+   "set": "trial",
+   "file": "A8_R5本会議0313",
+   "check": "para_masks",
+   "para": 826,
+   "min": 1,
+   "why": "本店長のあとの氏名"
+  },
+  {
+   "id": "P07",
+   "set": "trial",
+   "file": "A6_R5本会議0608",
+   "check": "para_not_withheld",
+   "paras": [
+    458,
+    459,
+    460,
+    461
+   ],
+   "why": "議員の公職としての推薦は個人情報ではない"
+  },
+  {
+   "id": "P08",
+   "set": "trial",
+   "file": "A6_R5本会議0608",
+   "check": "table_cell",
+   "cell": [
+    0,
+    4,
+    0
+   ],
+   "withheld": true,
+   "why": "専決処分の表の相手方の欄"
+  },
+  {
+   "id": "P09",
+   "set": "trial",
+   "file": "A6_R5本会議0608",
+   "check": "table_cell",
+   "cell": [
+    0,
+    3,
+    0
+   ],
+   "withheld": false,
+   "why": "損害賠償額は残す"
+  },
+  {
+   "id": "P10",
+   "set": "trial",
+   "file": "A7_R6本会議1212",
+   "check": "para_withheld",
+   "paras": [
+    663,
+    664,
+    665
+   ],
+   "why": "委員長報告の中の請願者の欄"
+  },
+  {
+   "id": "S01",
+   "set": "trial",
+   "file": "A7_R6本会議1212",
+   "check": "section_not_kind_at",
+   "seq": 77,
+   "kind": "採決",
+   "why": "朗読の中の「審査の結果」で区切らない"
+  },
+  {
+   "id": "S02",
+   "set": "trial",
+   "file": "A2_R7予算0313",
+   "check": "section_budget",
+   "id_": 1,
+   "is_range": false,
+   "why": "ページの「から…まで」は範囲ではない"
+  },
+  {
+   "id": "S03",
+   "set": "trial",
+   "file": "04_R41004決算",
+   "check": "section_budget",
+   "id_": 0,
+   "is_range": false,
+   "why": "「それから」「から始め」は範囲ではない"
+  },
+  {
+   "id": "S04",
+   "set": "trial",
+   "file": "A1_R7予算0306",
+   "check": "section_kind_at",
+   "seq": 183,
+   "kind": "款別質疑",
+   "why": "議案を議題＋款の宣言は款別質疑"
+  },
+  {
+   "id": "G01",
+   "set": "trial",
+   "file": "06_R7文教0929①",
+   "check": "gq",
+   "start": 541,
+   "end": 575,
+   "items": 5
+  },
+  {
+   "id": "G02",
+   "set": "trial",
+   "file": "10_H23本会議0912",
+   "check": "gq",
+   "start": 3,
+   "end": 39,
+   "why": "散会の発言は範囲の外"
+  },
+  {
+   "id": "G03",
+   "set": "trial",
+   "file": "A4_R6厚生1203",
+   "check": "gq",
+   "end": 397,
+   "items": 5
+  },
+  {
+   "id": "D01",
+   "set": "trial",
+   "file": "09_R3厚生委員会0726",
+   "check": "dedupe",
+   "is_rep": false,
+   "why": "08 と本文が同じ"
+  },
+  {
+   "id": "R01",
+   "set": "term",
+   "file": "2024-03-05_本会議",
+   "check": "para_withheld",
+   "paras": [
+    684,
+    685,
+    686,
+    692,
+    693,
+    694
+   ],
+   "why": "伏せ字の行のあとの名前（外一名）"
+  },
+  {
+   "id": "R02",
+   "set": "term",
+   "file": "2025-06-02_議会運営委員会",
+   "check": "para_masks",
+   "para": 69,
+   "min": 2,
+   "why": "取締役常務執行役員支社長"
+  },
+  {
+   "id": "R03",
+   "set": "term",
+   "file": "2025-06-19_総務区民委員会",
+   "check": "para_with_text_masks",
+   "contains": "乗務執行役員",
+   "min": 1,
+   "why": "誤記の肩書（乗務）"
+  },
+  {
+   "id": "R04",
+   "set": "term",
+   "file": "2026-02-09_議会運営委員会",
+   "check": "para_masks",
+   "para": 66,
+   "min": 5,
+   "keep": [
+    "東京本社代表"
+   ],
+   "why": "「東京本社代表」は肩書。そのあとの氏名を隠す"
+  },
+  {
+   "id": "R05",
+   "set": "term",
+   "file": "2026-02-27_総務区民委員会",
+   "check": "para_masks",
+   "para": 633,
+   "min": 5,
+   "keep": [
+    "東京本社代表"
+   ]
+  },
+  {
+   "id": "R06",
+   "set": "term",
+   "file": "2023-11-24_総務区民委員会",
+   "check": "para_keep",
+   "para": 415,
+   "keep": [
+    "時間限度内"
+   ],
+   "why": "人名でない語を隠さない"
+  },
+  {
+   "id": "R07",
+   "set": "term",
+   "file": "2024-12-04_文教委員会",
+   "check": "para_keep",
+   "para": 469,
+   "keep": [
+    "代表"
+   ],
+   "nomask": true
+  },
+  {
+   "id": "R08",
+   "set": "term",
+   "file": "2025-03-05_",
+   "check": "para_keep",
+   "para": 96,
+   "keep": [
+    "会を通じて"
+   ],
+   "nomask": true
+  },
+  {
+   "id": "R09",
+   "set": "term",
+   "file": "2025-06-12_厚生委員会",
+   "check": "para_keep",
+   "para": 679,
+   "keep": [
+    "続きすると思うん"
+   ],
+   "nomask": true
+  },
+  {
+   "id": "R10",
+   "set": "term",
+   "file": "2024-09-20_文教委員会_0920文教①",
+   "check": "para_keep",
+   "para": 199,
+   "keep": [
+    "広域連合"
+   ],
+   "nomask": true,
+   "why": "公の団体は個人の相手方として隠さない"
+  },
+  {
+   "id": "R11",
+   "set": "term",
+   "file": "2024-09-18_議会運営委員会",
+   "check": "para_not_withheld",
+   "paras": [
+    40
+   ],
+   "why": "資料の題名の行"
+  },
+  {
+   "id": "R12",
+   "set": "term",
+   "file": "2026-02-24_厚生委員会",
+   "check": "para_keep",
+   "para": 104,
+   "keep": [
+    "［非公開：契約の相手方（個人）"
+   ],
+   "why": "個人の契約の相手方は隠す"
+  },
+  {
+   "id": "R13",
+   "set": "term",
+   "file": "2023-09-05_本会議",
+   "check": "para_keep",
+   "para": 392,
+   "nomask": true,
+   "why": "公の機関の代表者は残す（設定で切り替え）"
+  },
+  {
+   "id": "R14",
+   "set": "term",
+   "file": "2023-09-27_本会議",
+   "check": "para_keep",
+   "para": 300,
+   "nomask": true
+  },
+  {
+   "id": "R15",
+   "set": "term",
+   "file": "2023-09-21_建設委員会_0921建設①",
+   "check": "para_keep",
+   "para": 107,
+   "nomask": true
+  },
+  {
+   "id": "M01",
+   "set": "term",
+   "file": "2025-06-24_建設委員会_0624建設①",
+   "check": "meeting",
+   "key_endswith": ":①",
+   "is_rep": true
+  },
+  {
+   "id": "M02",
+   "set": "term",
+   "file": "2025-06-24_建設委員会_0624建設②",
+   "check": "meeting",
+   "key_endswith": ":②",
+   "is_rep": true
+  },
+  {
+   "id": "M03",
+   "set": "term",
+   "file": "2025-06-24_総務区民委員会_0624総務区民②",
+   "check": "meeting",
+   "key_endswith": ":②",
+   "is_rep": true
+  },
+  {
+   "id": "M04",
+   "set": "term",
+   "file": "2025-06-24_文教委員会_0624文教②",
+   "check": "meeting",
+   "key_endswith": ":②",
+   "is_rep": true
+  },
+  {
+   "id": "M05",
+   "set": "term",
+   "file": "2025-09-17_災害対策調査特別委員会_R70917災対②",
+   "check": "meeting",
+   "date": "2025-09-17",
+   "key_endswith": ":②"
+  },
+  {
+   "id": "G10",
+   "set": "term",
+   "file": "2026-02-25_文教委員会",
+   "check": "gq",
+   "start": 635,
+   "end": 651,
+   "items": 2
+  },
+  {
+   "id": "G11",
+   "set": "term",
+   "file": "2024-09-26_総務区民委員会",
+   "check": "gq",
+   "start": 486,
+   "end": 569
+  },
+  {
+   "id": "G12",
+   "set": "term",
+   "file": "2023-11-27_総務区民委員会",
+   "check": "gq_none",
+   "why": "今回は一般質問なし"
+  },
+  {
+   "id": "G13",
+   "set": "term",
+   "file": "2025-12-08_厚生委員会",
+   "check": "gq",
+   "end": 416,
+   "why": "「一般質問終了いたします」（を なし）"
+  },
+  {
+   "id": "G14",
+   "set": "term",
+   "file": "2026-03-17_議会運営委員会",
+   "check": "gq_none",
+   "why": "「一般質問、あるの。」"
+  },
+  {
+   "id": "G15",
+   "set": "term",
+   "file": "2024-12-04_文教委員会",
+   "check": "gq",
+   "start": 703,
+   "end": 741,
+   "why": "「一般質問に入りますけれども」"
+  },
+  {
+   "id": "G16",
+   "set": "term",
+   "file": "2023-09-25_総務区民委員会_0925総務区民①",
+   "check": "gq_end_not_closing",
+   "why": "閉会の発言は範囲の外"
+  },
+  {
+   "id": "T01",
+   "set": "term",
+   "file": "2023-06-29_総務区民委員会",
+   "check": "speech_text_nonempty",
+   "seq": 77,
+   "why": "「○　坂田…」の読み取り"
+  },
+  {
+   "id": "T02",
+   "set": "term",
+   "file": "2023-10-10_決算審査特別委員会",
+   "check": "speech_text_nonempty",
+   "seq": 387
+  },
+  {
+   "id": "T03",
+   "set": "term",
+   "file": "2024-10-16_決算審査特別委員会",
+   "check": "speech_text_nonempty",
+   "seq": 3
+  },
+  {
+   "id": "Q01",
+   "set": "trial",
+   "file": "06_R7文教0929①",
+   "check": "gq_item_answers",
+   "item": 4,
+   "answers": [
+    570
+   ],
+   "why": "まとめて出た質問：570 は石沢委員の項目へ"
+  },
+  {
+   "id": "Q02",
+   "set": "trial",
+   "file": "06_R7文教0929①",
+   "check": "gq_item_answers",
+   "item": 5,
+   "answers": [
+    572,
+    574
+   ],
+   "why": "572・574 は関川委員の項目へ"
+  },
+  {
+   "id": "B01",
+   "set": "trial",
+   "file": "01_H23総務0224",
+   "check": "span_at",
+   "seq": 296,
+   "sentence_index": 2,
+   "kind": "請願・陳情",
+   "why": "発言の途中で次の請願へ"
+  },
+  {
+   "id": "B02",
+   "set": "trial",
+   "file": "01_H23総務0224",
+   "check": "span_at",
+   "seq": 310,
+   "sentence_index": 3,
+   "kind": "請願・陳情"
+  },
+  {
+   "id": "B03",
+   "set": "trial",
+   "file": "A2_R7予算0313",
+   "check": "span_at",
+   "seq": 323,
+   "sentence_index": 3,
+   "kind": "議案"
+  },
+  {
+   "id": "B04",
+   "set": "trial",
+   "file": "A2_R7予算0313",
+   "check": "span_at",
+   "seq": 363,
+   "sentence_index": 4,
+   "kind": "議案"
+  },
+  {
+   "id": "B05",
+   "set": "trial",
+   "file": "A2_R7予算0313",
+   "check": "span_at",
+   "seq": 398,
+   "sentence_index": 7,
+   "kind": "議案"
+  },
+  {
+   "id": "S05",
+   "set": "trial",
+   "file": "03_H29予特0310",
+   "check": "section_budget_detail",
+   "id_": 1,
+   "accounts": [
+    "一般会計"
+   ],
+   "sides": [
+    "歳出"
+   ],
+   "inherited": [
+    "会計",
+    "歳入歳出"
+   ],
+   "why": "同じ発言の前の文から会計を引き継ぐ"
+  },
+  {
+   "id": "S06",
+   "set": "trial",
+   "file": "A3_R7予算0310",
+   "check": "section_budget_detail",
+   "id_": 1,
+   "start_seq": 2,
+   "kind": "款別質疑",
+   "why": "「…から２項企画費…部分です」を始まりとして認識"
+  },
+  {
+   "id": "S07",
+   "set": "trial",
+   "file": "A1_R7予算0306",
+   "check": "section_budget_detail",
+   "id_": 3,
+   "kan": [
+    "11款交通安全対策特別交付金"
+   ],
+   "sides": [
+    "歳入"
+   ],
+   "why": "款の名前が切れない・歳入を引き継ぐ"
+  },
+  {
+   "id": "S08",
+   "set": "trial",
+   "file": "A1_R7予算0306",
+   "check": "section_budget_detail",
+   "id_": 4,
+   "kan": [
+    "12款分担金及び負担金",
+    "13款使用料及び手数料"
+   ],
+   "why": "名前の中の「及び」で切らない"
+  },
+  {
+   "id": "J01",
+   "set": "trial",
+   "file": "A6_R5本会議0608",
+   "check": "para_range_withheld",
+   "from": 634,
+   "to": 668,
+   "why": "人事の「記」以下（氏名・住所・生年月日・略歴）"
+  },
+  {
+   "id": "J02",
+   "set": "trial",
+   "file": "A7_R6本会議1212",
+   "check": "para_range_withheld",
+   "from": 702,
+   "to": 742
+  },
+  {
+   "id": "J03",
+   "set": "trial",
+   "file": "A7_R6本会議1212",
+   "check": "para_range_withheld",
+   "from": 768,
+   "to": 804
+  },
+  {
+   "id": "J04",
+   "set": "trial",
+   "file": "A7_R6本会議1212",
+   "check": "table_withheld_cells",
+   "cells": [
+    [
+     0,
+     4,
+     0
+    ]
+   ],
+   "why": "専決処分の表：相手方の欄の中身だけ"
+  },
+  {
+   "id": "J05",
+   "set": "trial",
+   "file": "A8_R5本会議0313",
+   "check": "table_withheld_cells",
+   "cells": [
+    [
+     0,
+     4,
+     0
+    ]
+   ]
+  },
+  {
+   "id": "N01",
+   "set": "trial",
+   "file": "06_R7文教0929①",
+   "check": "speaker_at",
+   "seq": 42,
+   "identified": true,
+   "how_contains": "書き分け",
+   "why": "同じ姓の書き分け（か）"
+  },
+  {
+   "id": "N02",
+   "set": "trial",
+   "file": "01_H23総務0224",
+   "check": "speaker_at",
+   "seq": 36,
+   "identified": true,
+   "how_contains": "書き分け",
+   "why": "同じ姓の書き分け（和）"
+  },
+  {
+   "id": "N03",
+   "set": "trial",
+   "file": "03_H29予特0310",
+   "check": "speaker_at",
+   "seq": 106,
+   "identified": true,
+   "how_contains": "書き分け",
+   "why": "同じ姓の書き分け（雅）"
+  },
+  {
+   "id": "N04",
+   "set": "trial",
+   "file": "01_H23総務0224",
+   "check": "speaker_at",
+   "seq": 89,
+   "identified": false,
+   "why": "原文の表記の誤り。推測で埋めず空欄"
+  },
+  {
+   "id": "N05",
+   "set": "trial",
+   "file": "06_R7文教0929①",
+   "check": "speaker_at",
+   "seq": 225,
+   "identified": false,
+   "why": "名簿に無い委員外議員。空欄"
+  },
+  {
+   "id": "N06",
+   "set": "term",
+   "file": "2023-06-08_総務区民委員会",
+   "check": "speaker_at",
+   "seq": 41,
+   "identified": true,
+   "why": "名簿の名前と肩書の間が1字分の空白"
+  },
+  {
+   "id": "N07",
+   "set": "term",
+   "file": "2023-05-26_厚生委員会",
+   "check": "speaker_at",
+   "seq": 2,
+   "identified": true,
+   "how_contains": "座長",
+   "why": "座長は名字で照合（要確認の印）"
+  },
+  {
+   "id": "N08",
+   "set": "term",
+   "file": "2023-05-26_災害対策調査特別委員会",
+   "check": "speaker_at",
+   "seq": 19,
+   "identified": true,
+   "why": "異体字（﨑と崎）"
+  },
+  {
+   "id": "N09",
+   "set": "term",
+   "file": "2023-11-15_災害対策調査特別委員会",
+   "check": "speaker_at",
+   "seq": 6,
+   "identified": true,
+   "how_contains": "講師",
+   "why": "講師の名前（「代表」を除く）"
+  },
+  {
+   "id": "E01",
+   "set": "trial",
+   "file": "10_H23本会議0912",
+   "check": "stats",
+   "expect": {
+    "eq_fields": 32,
+    "ptext_diff_paragraphs": 29,
+    "ptext_missing_chars": 88
+   },
+   "why": "EQ フィールドの議席番号・名前を読む"
+  },
+  {
+   "id": "G17",
+   "set": "term",
+   "file": "2025-12-04_災害対策調査特別委員会",
+   "check": "gq",
+   "start": 296
+  },
+  {
+   "id": "G18",
+   "set": "term",
+   "file": "2024-06-24_総務区民委員会",
+   "check": "gq",
+   "start": 551,
+   "end": 587
+  },
+  {
+   "id": "G19",
+   "set": "term",
+   "file": "2023-06-23_文教委員会",
+   "check": "gq",
+   "end": 576,
+   "why": "「その他」に入る宣言の発言は範囲の外"
+  },
+  {
+   "id": "G20",
+   "set": "term",
+   "file": "2024-06-17_厚生委員会",
+   "check": "gq",
+   "end": 241,
+   "why": "閉会の発言は範囲の外"
+  },
+  {
+   "id": "L01",
+   "set": "term",
+   "file": "2023-11-15_災害対策調査特別委員会",
+   "check": "speeches_same_para",
+   "seqs": [
+    16,
+    17
+   ],
+   "why": "1つの段落に2つの発言"
+  },
+  {
+   "id": "W01",
+   "set": "trial",
+   "file": "A2_R7予算0313",
+   "check": "disorder_at",
+   "seq": 307,
+   "category": "ふつうの使われ方",
+   "why": "時間の告知は候補にしない"
+  },
+  {
+   "id": "W02",
+   "set": "trial",
+   "file": "A5_R6厚生0919",
+   "check": "disorder_at",
+   "seq": 94,
+   "category": "乱れた場面の候補",
+   "why": "言い返しの声"
+  },
+  {
+   "id": "R16",
+   "set": "term",
+   "file": "2025-03-17_総務区民委員会",
+   "check": "name_kept_after",
+   "para": 74,
+   "anchor": "関東地方整備局長",
+   "why": "国の局長（公の機関の代表者）の名前は残す"
+  },
+  {
+   "id": "R17",
+   "set": "term",
+   "file": "2023-09-05_本会議",
+   "check": "name_kept_after",
+   "para": 392,
+   "anchor": "千代田区長",
+   "why": "公の機関の代表者の名前が残っていること"
+  },
+  {
+   "id": "R18",
+   "set": "term",
+   "file": "2023-09-27_本会議",
+   "check": "name_kept_after",
+   "para": 300,
+   "anchor": "千代田区長"
+  },
+  {
+   "id": "R19",
+   "set": "term",
+   "file": "2023-09-21_建設委員会_0921建設①",
+   "check": "name_kept_after",
+   "para": 107,
+   "anchor": "千代田区長"
+  },
+  {
+   "id": "A01",
+   "set": "all",
+   "check": "verify_rebuild",
+   "why": "全件で本文を原文の段落から作り直せる"
+  },
+  {
+   "id": "A02",
+   "set": "all",
+   "check": "no_unmasked_rep",
+   "why": "契約の文で、会社の肩書のすぐあとに隠していない名前が残っていない（公の機関は除く）"
+  },
+  {
+   "id": "A03",
+   "set": "all",
+   "check": "parties_no_mask_in_company",
+   "why": "契約の相手方の企業名の欄に印や人名が入っていない"
+  },
+  {
+   "id": "W03",
+   "set": "all",
+   "check": "disorder_csv_excludes_nonrep",
+   "why": "重複の代表でないファイルは議事の言葉の一覧から外す"
+  }
+ ]
+}
