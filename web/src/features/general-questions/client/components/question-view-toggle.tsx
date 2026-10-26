@@ -29,37 +29,19 @@ function isQuestioner(speaker: string): boolean {
   return /^\d+番/.test(speaker) || /議員$/.test(speaker);
 }
 
-function RawTranscriptContent({
-  rawText,
-  topics,
-}: {
-  rawText: string;
-  topics: GeneralQuestionTopic[];
-}) {
+// 「全文」：発言を会議録の順に並べるだけ。論点の見出しの帯は出さない
+// （以前は帯を「発言の数×i÷論点の数」のおおよその位置に置いており、別の答弁者の発言の上に出ることがあったため。2026-10-26）
+function RawTranscriptContent({ rawText }: { rawText: string }) {
   const turns = parseSpeakerTurns(rawText);
-  // Insert topic title dividers at proportionally estimated positions
-  const dividerAt = new Map<number, string>();
-  if (topics.length > 0) {
-    dividerAt.set(0, topics[0].title);
-    for (let i = 1; i < topics.length; i++) {
-      dividerAt.set(
-        Math.floor((turns.length * i) / topics.length),
-        topics[i].title
-      );
-    }
-  }
   return (
     <div className="flex flex-col gap-4">
+      <p className="text-xs leading-relaxed text-mirai-text-secondary">
+        会議録の順に発言を並べています。論点ごとの見出しは「論点ごと」でご覧ください。
+      </p>
       {turns.map((turn, i) => {
-        const topicTitle = dividerAt.get(i);
         const isQ = isQuestioner(turn.speaker);
         return (
           <Fragment key={`${i}-${turn.speaker}`}>
-            {topicTitle && (
-              <p className="text-center text-xs font-medium text-mirai-text-secondary bg-mirai-surface-muted rounded-full px-3 py-1 mx-auto">
-                {topicTitle}
-              </p>
-            )}
             <div className={isQ ? "flex justify-end" : "flex"}>
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-3 ${
@@ -134,7 +116,7 @@ export function QuestionViewToggle({
           <QuestionChatView topics={topics} />
         </>
       ) : (
-        <RawTranscriptContent rawText={rawText} topics={topics} />
+        <RawTranscriptContent rawText={rawText} />
       )}
     </div>
   );

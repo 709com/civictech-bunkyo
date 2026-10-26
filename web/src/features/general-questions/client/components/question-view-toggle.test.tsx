@@ -79,4 +79,23 @@ describe("QuestionViewToggle", () => {
     const answerText = screen.getByText("答弁の本文です。");
     expect(answerText.closest(".justify-end")).toBeNull();
   });
+
+  it("「全文」では、論点の見出しの帯を出さず、発言を会議録の順に並べる", () => {
+    const twoTopics: GeneralQuestionTopic[] = [
+      extractedTopics[0],
+      { ...extractedTopics[0], title: "教育について" },
+    ];
+    render(<QuestionViewToggle topics={twoTopics} rawText={rawText} />);
+    fireEvent.click(screen.getByRole("button", { name: "全文" }));
+    expect(screen.queryByText("防災について")).not.toBeInTheDocument();
+    expect(screen.queryByText("教育について")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/会議録の順に発言を並べています/)
+    ).toBeInTheDocument();
+    const q = screen.getByText("質問の本文です。");
+    const a = screen.getByText("答弁の本文です。");
+    expect(
+      q.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
 });
