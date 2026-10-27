@@ -18,7 +18,7 @@ from collections import Counter, OrderedDict
 from committee_docx_text import read_document
 
 TOOL_NAME = "split_committee_minutes.py"
-TOOL_VERSION = "0.3.7 (2026-10-27 委員会の一般質問の項目名：質問→答弁の前置き→言葉から分野を推定)"
+TOOL_VERSION = "0.3.8 (2026-10-27 項目名の分野の推定：数えないのは長の呼び名と委員会名だけ、決まらないときは予備で)"
 
 SP = "　"
 DIG = str.maketrans("０１２３４５６７８９", "0123456789")
@@ -1370,13 +1370,19 @@ class Meeting:
         est = estimate_field("\n".join(sp_text.get(q, "") for q in it["question_seqs"]))
         ev = {"field": est["field"], "rule": est["rule"], "totals": est["totals"], "hits": est["hits"],
               "not_counted": est["not_counted"]}
+        if est.get("fallback"):
+            ev["fallback"] = est["fallback"]  # 予備（数えなかった長の呼び名・委員会名の分野）で決めたこと
         if rejected:
             ev["answer_rejected"] = rejected  # 宛名だけなど、項目名にしなかった答弁の前置き
         it["title_evidence"] = ev
         if est["field"]:
             it.update(title=f"（{est['field']}）", title_field=est["field"], title_source="言葉から推定",
                       title_rule="質問の本文の言葉の一覧で分野を推定（AI なし）")
-            words = "・".join(f"{w}{n}" for w, n in est["hits"][est["field"]].items())
+            if est.get("fallback"):
+                it["title_rule"] += "／予備：数えなかった長の呼び名・委員会名の分野"
+                words = "予備 " + "・".join(f"{w}{n}" for w, n in est["fallback"]["names"].items())
+            else:
+                words = "・".join(f"{w}{n}" for w, n in est["hits"][est["field"]].items())
             nc[nc.index(blank)] = f"項目名は言葉から分野を推定（要確認。{est['field']}：{words}）"
         else:
             nc[nc.index(blank)] = f"項目名の決まった言い回しが見つからず、答弁の前置き・言葉の一覧でも決まらず空欄（{est['rule']}）"
@@ -1932,20 +1938,21 @@ FIELD_WORDS = {
                 "観光", "祭り", "博物館", "美術館", "万博", "運動公園", "体育施設"],
     "地域・区民活動": ["町会", "自治会", "地域活動", "ＮＰＯ", "NPO", "ボランティア", "商店街", "協働", "地域振興",
                 "区民センター", "コミュニティ"],
-    "区政運営": ["公文書", "文書管理", "職員", "特別職", "一般職", "兼職", "行政改革", "組織", "人事", "人材育成",
+    "区政運営": ["公文書", "文書管理", "職員", "特別職", "一般職", "兼職", "行政改革", "人事", "人材育成",
              "人手不足", "定数", "情報公開", "苦情", "ハラスメント", "庁舎", "区長選挙", "例規"],
 }
 FIELD_ORDER = list(FIELD_WORDS)
 _W2F = {w: f for f, ws in FIELD_WORDS.items() for w in ws}
 assert len(_W2F) == sum(len(ws) for ws in FIELD_WORDS.values()), "同じ言葉が2つの分野に入っている"
 FIELD_RE = re.compile("|".join(re.escape(w) for w in sorted(_W2F, key=len, reverse=True)))
-# 数えない言葉：役職・課や部・機関・委員会の名前の中の言葉（「教育長」「防災課長」「災害対策調査特別委員会」の
-# 「教育」「防災」「災害」など）。話題ではなく、相手や場所を呼んでいるだけなので、分野を数える前に外す。
-# 「子育て支援課」のように、ひらがなを含む名前は形で拾えないので、名前を並べて持つ。
-NOT_COUNTED_NAMES = ["教育長", "教育委員会", "教育委員", "子育て支援課", "子育て支援部", "子ども家庭部", "子ども施設担当課"]
+# 数えない言葉（v0.3.8 で絞った）：課・部・局などの長の呼び名（「防災課長」「教育長」）と、委員会名
+# （「決算審査特別委員会」「教育委員会」など会議体そのもの）の中の言葉。話題ではなく、相手や場所を呼んでいるだけなので、
+# 分野を数える前に外す。「〜本部」「〜協議会」「〜審議会」「〜課」「〜部」は話題になりうるので数える。
+# 「子育て支援課長」のように、ひらがなを含む名前は形で拾えないので、名前を並べて持つ。
+NOT_COUNTED_NAMES = ["教育長", "教育委員会", "教育委員", "子育て支援課長", "子育て支援部長", "子ども家庭部長", "子ども施設担当課長"]
 NOT_COUNTED_RE = re.compile(
     "|".join(re.escape(w) for w in sorted(NOT_COUNTED_NAMES, key=len, reverse=True)) +
-    r"|[一-龥ァ-ヶー・]{1,20}?(?:担当課長|担当部長|課長|部長|局長|室長|所長|委員会|審議会|協議会|課|部|局)(?![題活分品門屋材位])")
+    r"|[一-龥ァ-ヶー・]{1,20}?(?:担当課長|担当部長|課長|部長|局長|室長|所長|委員会)")
 
 
 def blank_not_counted(text):
@@ -1980,8 +1987,8 @@ def estimate_field(text):
            "totals": dict(sorted(totals.items(), key=lambda x: (-x[1], FIELD_ORDER.index(x[0])))),
            "not_counted": dict(ignored.most_common())}
     if not totals:
-        res["rule"] = "言葉が1つも当たらない（空欄）"
-        return res
+        res["rule"] = "言葉が1つも当たらない"
+        return _fallback(res, ignored, None)
     top = max(totals.values())
     cand = [f for f in totals if totals[f] == top]
     if len(cand) > 1:
@@ -1989,12 +1996,35 @@ def estimate_field(text):
         k = max(kinds.values())
         cand = [f for f in cand if kinds[f] == k]
         if len(cand) > 1:
-            res["rule"] = f"同点（{'・'.join(sorted(cand, key=FIELD_ORDER.index))}、各{top}回・各{k}種類）で決めない（空欄）"
-            return res
+            res["rule"] = f"同点（{'・'.join(sorted(cand, key=FIELD_ORDER.index))}、各{top}回・各{k}種類）"
+            return _fallback(res, ignored, cand)
         res["rule"] = f"回数は同点（{top}回）、言葉の種類の数（{k}）で決めた"
     else:
         res["rule"] = "回数が最も多い分野"
     res["field"] = cand[0]
+    return res
+
+
+def _fallback(res, ignored, cand):
+    """予備（v0.3.8）：言葉で決まらないとき（ゼロ・同点）、数えなかった長の呼び名・委員会名の中の言葉の分野で決める。
+    同点のときは、同点だった分野の中からだけ選ぶ。予備でも決まらなければ空欄。"""
+    fb, words = Counter(), {}
+    for name, n in ignored.items():
+        for m in FIELD_RE.finditer(name):
+            f = _W2F[m.group(0)]
+            if cand is None or f in cand:
+                fb[f] += n
+                words.setdefault(f, Counter())[name] += n
+    if fb:
+        top = max(fb.values())
+        best = [f for f in fb if fb[f] == top]
+        if len(best) == 1:
+            f = best[0]
+            res["field"] = f
+            res["fallback"] = {"field": f, "count": top, "names": dict(words[f].most_common())}
+            res["rule"] += f"→予備：数えなかった名前（{'・'.join(f'{w}{c}' for w, c in words[f].most_common())}）の分野で決めた"
+            return res
+    res["rule"] += "で決めない（空欄）" if cand else "（空欄）"
     return res
 
 
