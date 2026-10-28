@@ -34,6 +34,10 @@ export const policyLinks: FooterPolicyLink[] = [
     href: "/about",
   },
   {
+    label: "このサイトの作り方",
+    href: "/how-we-build",
+  },
+  {
     label: "よくあるご質問",
     href: "/faq",
   },
