@@ -7,6 +7,9 @@ import type { SearchFilters } from "../types";
 export function buildSearchQuery(filters: SearchFilters): string {
   const params = new URLSearchParams();
   if (filters.terms.length > 0) params.set("q", filters.terms.join(" "));
+  if (filters.scope === "committee") params.set("scope", "committee");
+  if (filters.meetingBodyId) params.set("body", filters.meetingBodyId);
+  if (filters.gqOnly) params.set("gq", "1");
   if (filters.councilSessionId) params.set("session", filters.councilSessionId);
   if (filters.memberId) params.set("member", filters.memberId);
   if (filters.factionName) params.set("faction", filters.factionName);

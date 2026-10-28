@@ -5,6 +5,9 @@ import { parseSearchParams } from "./parse-search-params";
 
 const empty: SearchFilters = {
   terms: [],
+  scope: "plenary",
+  meetingBodyId: null,
+  gqOnly: false,
   councilSessionId: null,
   memberId: null,
   factionName: null,
@@ -31,6 +34,9 @@ describe("buildSearchQuery", () => {
   it("作ったパラメータを読み戻すと、元の条件に戻る", () => {
     const filters: SearchFilters = {
       terms: ["保育園", "待機児童"],
+      scope: "plenary",
+      meetingBodyId: null,
+      gqOnly: false,
       councilSessionId: "6f0e1c7a-5b0d-4f6e-9a57-b0c7b1f2d3e4",
       memberId: "0a1b2c3d-0000-4000-8000-abcdefabcdef",
       factionName: "ぶんきょう子育て.ネット",
@@ -38,5 +44,24 @@ describe("buildSearchQuery", () => {
     };
     const params = new URLSearchParams(buildSearchQuery(filters));
     expect(parseSearchParams(Object.fromEntries(params))).toEqual(filters);
+  });
+
+  it("委員会を探す条件も読み戻せる", () => {
+    const filters: SearchFilters = {
+      ...empty,
+      terms: ["ICT"],
+      scope: "committee",
+      meetingBodyId: "6f0e1c7a-5b0d-4f6e-9a57-b0c7b1f2d3e4",
+      gqOnly: true,
+    };
+    const params = new URLSearchParams(buildSearchQuery(filters));
+    expect(parseSearchParams(Object.fromEntries(params))).toEqual(filters);
+  });
+
+  it("本会議（今までどおり）のときは scope を付けない", () => {
+    const params = new URLSearchParams(
+      buildSearchQuery({ ...empty, terms: ["防災"] })
+    );
+    expect(params.has("scope")).toBe(false);
   });
 });

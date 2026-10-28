@@ -60,6 +60,9 @@ describe("parseSearchParams", () => {
       })
     ).toEqual({
       terms: ["防災", "避難所"],
+      scope: "plenary",
+      meetingBodyId: null,
+      gqOnly: false,
       councilSessionId: sessionId,
       memberId,
       factionName: "公明党文京区議団",
@@ -70,6 +73,9 @@ describe("parseSearchParams", () => {
   it("何も指定がなければ、すべて指定なしになる", () => {
     expect(parseSearchParams({})).toEqual({
       terms: [],
+      scope: "plenary",
+      meetingBodyId: null,
+      gqOnly: false,
       councilSessionId: null,
       memberId: null,
       factionName: null,
@@ -92,6 +98,25 @@ describe("parseSearchParams", () => {
     expect(filters.answererRole).toBeNull();
   });
 
+  it("委員会を探す条件を読み取る", () => {
+    const filters = parseSearchParams({
+      q: "保育園",
+      scope: "committee",
+      body: sessionId,
+      gq: "1",
+    });
+    expect(filters.scope).toBe("committee");
+    expect(filters.meetingBodyId).toBe(sessionId);
+    expect(filters.gqOnly).toBe(true);
+  });
+
+  it("範囲が committee 以外なら本会議、gq が 1 以外なら一般質問だけにしない", () => {
+    const filters = parseSearchParams({ scope: "abc", gq: "true", body: "x" });
+    expect(filters.scope).toBe("plenary");
+    expect(filters.gqOnly).toBe(false);
+    expect(filters.meetingBodyId).toBeNull();
+  });
+
   it("同じパラメータが複数あるときは最初の値を使う", () => {
     expect(parseSearchParams({ q: ["防災", "保育園"] }).terms).toEqual([
       "防災",
@@ -106,6 +131,12 @@ describe("hasAnyCondition", () => {
 
   it("キーワードがあれば true", () => {
     expect(hasAnyCondition(parseSearchParams({ q: "防災" }))).toBe(true);
+  });
+
+  it("範囲を委員会にしただけでは false", () => {
+    expect(hasAnyCondition(parseSearchParams({ scope: "committee" }))).toBe(
+      false
+    );
   });
 
   it("絞り込みだけでも true", () => {

@@ -4303,6 +4303,7 @@ export type Database = {
     }
     Functions: {
       alias_key_loose: { Args: { p_text: string }; Returns: string }
+      committee_minutes_search_options: { Args: never; Returns: Json }
       count_reactions_by_report_ids: {
         Args: { report_ids: string[] }
         Returns: {
@@ -4350,6 +4351,37 @@ export type Database = {
         Args: { p_member_id: string }
         Returns: undefined
       }
+      search_committee_minutes: {
+        Args: {
+          p_gq_only?: boolean
+          p_limit?: number
+          p_meeting_body_id?: string
+          p_member_id?: string
+          p_terms?: string[]
+        }
+        Returns: {
+          body_name: string
+          item_no: number
+          item_questioner: string
+          item_title: string
+          item_title_source: string
+          meeting_date: string
+          meeting_id: string
+          passage_length: number
+          section_kind: string
+          snippet: string
+          snippet_has_after: boolean
+          snippet_has_before: boolean
+          speaker_detail: string
+          speaker_kind: string
+          speaker_name: string
+          speaker_role: string
+          speech_id: string
+          speech_order: number
+          total_meetings: number
+          total_passages: number
+        }[]
+      }
       search_general_question_passages: {
         Args: {
           p_answerer_role?: string
@@ -4386,6 +4418,7 @@ export type Database = {
         Args: { target_session_id: string }
         Returns: undefined
       }
+      to_fullwidth_alnum: { Args: { p_text: string }; Returns: string }
     }
     Enums: {
       bill_publish_status: "draft" | "published" | "coming_soon"

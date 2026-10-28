@@ -1,7 +1,19 @@
+/**
+ * 探す範囲。
+ * - plenary: 本会議の一般質問（今までどおり）
+ * - committee: 委員会の会議録の全文
+ */
+export type SearchScope = "plenary" | "committee";
+
 /** 検索条件（URL のパラメータを解釈したもの） */
 export type SearchFilters = {
   /** キーワード。すべて含む箇所を探す */
   terms: string[];
+  scope: SearchScope;
+  /** 委員会名（meeting_bodies の ID）。委員会を探すときだけ */
+  meetingBodyId: string | null;
+  /** 委員会の一般質問の部分だけを探すか。委員会を探すときだけ */
+  gqOnly: boolean;
   councilSessionId: string | null;
   memberId: string | null;
   /** その発言時点の会派名 */
@@ -16,6 +28,8 @@ export type SearchOptions = {
   members: { id: string; name: string }[];
   factions: string[];
   answererRoles: string[];
+  /** 委員会名（委員会の会議録がある会議体だけ） */
+  bodies: { id: string; name: string }[];
 };
 
 /**
@@ -89,4 +103,74 @@ export type SectionDetail = {
   questionerName: string | null;
   questionerFaction: string | null;
   speeches: SpeechDetail[];
+};
+
+/** 委員会の一般質問の項目名の出どころ（null は空欄） */
+export type ItemTitleSource = "質問" | "答弁" | "言葉から推定" | null;
+
+/** 委員会の会議録の検索結果の1件（発言1つ） */
+export type CommitteeSearchPassage = {
+  speechId: string;
+  meetingId: string;
+  meetingDate: string;
+  bodyName: string | null;
+  /** 区切りの種類（一般質問・理事者報告など） */
+  sectionKind: string | null;
+  speechOrder: number;
+  speakerKind: string;
+  /** 分解の道具の話し手の区分（委員長・議員・理事者 など） */
+  speakerDetail: string | null;
+  speakerName: string;
+  speakerRole: string | null;
+  /** 委員会の一般質問の項目（結び付いている発言だけ） */
+  item: {
+    no: number;
+    title: string | null;
+    titleSource: ItemTitleSource;
+    questioner: string | null;
+  } | null;
+  snippet: string;
+  snippetHasBefore: boolean;
+  snippetHasAfter: boolean;
+};
+
+export type CommitteeSearchResult = {
+  passages: CommitteeSearchPassage[];
+  /** 条件に合った発言の総数（一覧に出していない分も含む） */
+  totalPassages: number;
+  /** 条件に合った発言を含む会議の数 */
+  totalMeetings: number;
+};
+
+/** 会議1回分の全文の、発言1つ */
+export type MeetingSpeech = {
+  id: string;
+  speechOrder: number;
+  speakerKind: string;
+  speakerDetail: string | null;
+  speakerLabel: string;
+  body: string;
+  /** その発言の入る区切りの種類（前の発言と変わったところで見出しを出す） */
+  sectionId: string | null;
+  sectionKind: string | null;
+  /** 委員会の一般質問の項目（結び付いている発言だけ。いちばん番号の小さい項目） */
+  item: {
+    no: number;
+    title: string | null;
+    titleSource: ItemTitleSource;
+  } | null;
+};
+
+/** 会議1回分の全文（委員会・本会議） */
+export type MeetingDetail = {
+  meetingId: string;
+  kind: string;
+  meetingDate: string;
+  bodyName: string | null;
+  sessionName: string | null;
+  dayLabel: string | null;
+  titleRaw: string | null;
+  sourceFile: string;
+  sourceType: string;
+  speeches: MeetingSpeech[];
 };

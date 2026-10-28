@@ -40,13 +40,57 @@ export function SearchForm({ filters, options }: SearchFormProps) {
           </Button>
         </div>
         <p className="text-xs text-gray-500">
-          発言の本文と、章・論点の見出しから探します。
+          本会議は、発言の本文と章・論点の見出しから探します。委員会は、発言の本文から探します（半角・全角の英数字はどちらでも当たります）。
         </p>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="search-session">定例会</Label>
+          <Label htmlFor="search-scope">探す範囲</Label>
+          <select
+            id="search-scope"
+            name="scope"
+            defaultValue={filters.scope}
+            className={selectClassName}
+          >
+            <option value="plenary">本会議の一般質問</option>
+            <option value="committee">委員会の会議録（全文）</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="search-body">委員会名（委員会のとき）</Label>
+          <select
+            id="search-body"
+            name="body"
+            defaultValue={filters.meetingBodyId ?? ""}
+            className={selectClassName}
+          >
+            <option value="">すべての委員会</option>
+            {options.bodies.map((body) => (
+              <option key={body.id} value={body.id}>
+                {body.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-end gap-2 pb-2 lg:col-span-2">
+          <input
+            id="search-gq"
+            name="gq"
+            type="checkbox"
+            value="1"
+            defaultChecked={filters.gqOnly}
+            className="size-4"
+          />
+          <Label htmlFor="search-gq">
+            委員会の一般質問の部分だけを探す（委員会のとき）
+          </Label>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="search-session">定例会（本会議のとき）</Label>
           <select
             id="search-session"
             name="session"
@@ -63,7 +107,9 @@ export function SearchForm({ filters, options }: SearchFormProps) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="search-member">質問者（議員）</Label>
+          <Label htmlFor="search-member">
+            議員（本会議は質問者・委員会は発言者）
+          </Label>
           <select
             id="search-member"
             name="member"
@@ -80,7 +126,7 @@ export function SearchForm({ filters, options }: SearchFormProps) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="search-faction">会派（発言時点）</Label>
+          <Label htmlFor="search-faction">会派（本会議のとき・発言時点）</Label>
           <select
             id="search-faction"
             name="faction"
@@ -97,7 +143,7 @@ export function SearchForm({ filters, options }: SearchFormProps) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="search-answerer">答弁者</Label>
+          <Label htmlFor="search-answerer">答弁者（本会議のとき）</Label>
           <select
             id="search-answerer"
             name="answerer"
