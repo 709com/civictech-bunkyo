@@ -82,8 +82,9 @@ async function importFromCsv() {
       const csvPath = path.join(dataDir, config.file);
       const records = readCsv<Record<string, unknown>>(csvPath);
 
+      // 表が多くなり型の展開が深すぎる（TS2589）ため、表の名前の型だけゆるめる（動きは同じ）
       const { data, error } = await supabase
-        .from(config.table)
+        .from(config.table as never)
         .insert(records as never[])
         .select();
 

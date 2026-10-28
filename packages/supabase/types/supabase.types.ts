@@ -34,6 +34,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_items: {
+        Row: {
+          bill_id: string | null
+          created_at: string
+          id: string
+          item_kind: string | null
+          item_order: number
+          label: string | null
+          level: number | null
+          meeting_id: string
+          para: number | null
+          paras: number[] | null
+          raw: string
+          refs: string[] | null
+          title: string | null
+        }
+        Insert: {
+          bill_id?: string | null
+          created_at?: string
+          id?: string
+          item_kind?: string | null
+          item_order: number
+          label?: string | null
+          level?: number | null
+          meeting_id: string
+          para?: number | null
+          paras?: number[] | null
+          raw: string
+          refs?: string[] | null
+          title?: string | null
+        }
+        Update: {
+          bill_id?: string | null
+          created_at?: string
+          id?: string
+          item_kind?: string | null
+          item_order?: number
+          label?: string | null
+          level?: number | null
+          meeting_id?: string
+          para?: number | null
+          paras?: number[] | null
+          raw?: string
+          refs?: string[] | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_items_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_items_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_contents: {
         Row: {
           bill_id: string
@@ -600,6 +663,76 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_parties: {
+        Row: {
+          address: string | null
+          bill_nearby: string | null
+          company: string | null
+          created_at: string
+          id: string
+          is_individual: boolean
+          meeting_id: string
+          note: string | null
+          para: number | null
+          party_order: number
+          representative_title: string | null
+          section_refs: string[] | null
+          speech_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          bill_nearby?: string | null
+          company?: string | null
+          created_at?: string
+          id?: string
+          is_individual?: boolean
+          meeting_id: string
+          note?: string | null
+          para?: number | null
+          party_order: number
+          representative_title?: string | null
+          section_refs?: string[] | null
+          speech_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          bill_nearby?: string | null
+          company?: string | null
+          created_at?: string
+          id?: string
+          is_individual?: boolean
+          meeting_id?: string
+          note?: string | null
+          para?: number | null
+          party_order?: number
+          representative_title?: string | null
+          section_refs?: string[] | null
+          speech_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_parties_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_parties_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "contract_parties_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       council_member_committees: {
         Row: {
           committee_id: string
@@ -706,6 +839,102 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      disorder_candidates: {
+        Row: {
+          after_speech_id: string | null
+          by_presider: boolean | null
+          cand_order: number
+          category: string
+          caution: boolean | null
+          created_at: string
+          id: string
+          label_raw: string | null
+          meeting_id: string
+          para: number | null
+          retract: string | null
+          sentence_index: number | null
+          signals: string[] | null
+          speech_id: string | null
+          where_found: string
+          word: string
+          wording: string
+        }
+        Insert: {
+          after_speech_id?: string | null
+          by_presider?: boolean | null
+          cand_order: number
+          category: string
+          caution?: boolean | null
+          created_at?: string
+          id?: string
+          label_raw?: string | null
+          meeting_id: string
+          para?: number | null
+          retract?: string | null
+          sentence_index?: number | null
+          signals?: string[] | null
+          speech_id?: string | null
+          where_found: string
+          word: string
+          wording: string
+        }
+        Update: {
+          after_speech_id?: string | null
+          by_presider?: boolean | null
+          cand_order?: number
+          category?: string
+          caution?: boolean | null
+          created_at?: string
+          id?: string
+          label_raw?: string | null
+          meeting_id?: string
+          para?: number | null
+          retract?: string | null
+          sentence_index?: number | null
+          signals?: string[] | null
+          speech_id?: string | null
+          where_found?: string
+          word?: string
+          wording?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disorder_candidates_after_speech_id_fkey"
+            columns: ["after_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "disorder_candidates_after_speech_id_fkey"
+            columns: ["after_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disorder_candidates_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disorder_candidates_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "disorder_candidates_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expert_registrations: {
         Row: {
@@ -818,6 +1047,150 @@ export type Database = {
         }
         Relationships: []
       }
+      general_question_item_speeches: {
+        Row: {
+          attribution: string | null
+          created_at: string
+          id: string
+          item_id: string
+          role: string
+          speech_id: string
+        }
+        Insert: {
+          attribution?: string | null
+          created_at?: string
+          id?: string
+          item_id: string
+          role: string
+          speech_id: string
+        }
+        Update: {
+          attribution?: string | null
+          created_at?: string
+          id?: string
+          item_id?: string
+          role?: string
+          speech_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_question_item_speeches_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "general_question_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_question_item_speeches_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "general_question_item_speeches_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      general_question_items: {
+        Row: {
+          count_hint: string | null
+          created_at: string
+          first_sentence: string | null
+          id: string
+          is_related_question: boolean
+          item_no: number
+          member_id: string | null
+          needs_check: boolean
+          needs_check_reasons: string[] | null
+          questioner_full_name: string | null
+          questioner_label: string | null
+          range_id: string
+          section_id: string | null
+          title: string | null
+          title_field: string | null
+          title_from_seq: number | null
+          title_rule: string | null
+          title_source: string | null
+          titles_found: string[] | null
+        }
+        Insert: {
+          count_hint?: string | null
+          created_at?: string
+          first_sentence?: string | null
+          id?: string
+          is_related_question?: boolean
+          item_no: number
+          member_id?: string | null
+          needs_check?: boolean
+          needs_check_reasons?: string[] | null
+          questioner_full_name?: string | null
+          questioner_label?: string | null
+          range_id: string
+          section_id?: string | null
+          title?: string | null
+          title_field?: string | null
+          title_from_seq?: number | null
+          title_rule?: string | null
+          title_source?: string | null
+          titles_found?: string[] | null
+        }
+        Update: {
+          count_hint?: string | null
+          created_at?: string
+          first_sentence?: string | null
+          id?: string
+          is_related_question?: boolean
+          item_no?: number
+          member_id?: string | null
+          needs_check?: boolean
+          needs_check_reasons?: string[] | null
+          questioner_full_name?: string | null
+          questioner_label?: string | null
+          range_id?: string
+          section_id?: string | null
+          title?: string | null
+          title_field?: string | null
+          title_from_seq?: number | null
+          title_rule?: string | null
+          title_source?: string | null
+          titles_found?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_question_items_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_question_items_range_id_fkey"
+            columns: ["range_id"]
+            isOneToOne: false
+            referencedRelation: "general_question_ranges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_question_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: true
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_question_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: true
+            referencedRelation: "sections_analysis"
+            referencedColumns: ["section_id"]
+          },
+        ]
+      }
       general_question_overviews: {
         Row: {
           council_session_id: string
@@ -846,6 +1219,102 @@ export type Database = {
             columns: ["council_session_id"]
             isOneToOne: true
             referencedRelation: "council_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      general_question_ranges: {
+        Row: {
+          created_at: string
+          declared: Json
+          declared_check: Json | null
+          end_declarations: number | null
+          end_marker: string | null
+          end_seq: number | null
+          end_speech_id: string | null
+          end_wording: string | null
+          id: string
+          meeting_id: string
+          needs_check: string | null
+          notices: Json
+          speech_count: number | null
+          start_declarations: number | null
+          start_seq: number | null
+          start_speech_id: string | null
+          start_wording: string | null
+        }
+        Insert: {
+          created_at?: string
+          declared?: Json
+          declared_check?: Json | null
+          end_declarations?: number | null
+          end_marker?: string | null
+          end_seq?: number | null
+          end_speech_id?: string | null
+          end_wording?: string | null
+          id?: string
+          meeting_id: string
+          needs_check?: string | null
+          notices?: Json
+          speech_count?: number | null
+          start_declarations?: number | null
+          start_seq?: number | null
+          start_speech_id?: string | null
+          start_wording?: string | null
+        }
+        Update: {
+          created_at?: string
+          declared?: Json
+          declared_check?: Json | null
+          end_declarations?: number | null
+          end_marker?: string | null
+          end_seq?: number | null
+          end_speech_id?: string | null
+          end_wording?: string | null
+          id?: string
+          meeting_id?: string
+          needs_check?: string | null
+          notices?: Json
+          speech_count?: number | null
+          start_declarations?: number | null
+          start_seq?: number | null
+          start_speech_id?: string | null
+          start_wording?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_question_ranges_end_speech_id_fkey"
+            columns: ["end_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "general_question_ranges_end_speech_id_fkey"
+            columns: ["end_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_question_ranges_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: true
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_question_ranges_start_speech_id_fkey"
+            columns: ["start_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "general_question_ranges_start_speech_id_fkey"
+            columns: ["start_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
             referencedColumns: ["id"]
           },
         ]
@@ -932,7 +1401,56 @@ export type Database = {
             referencedRelation: "sections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "general_questions_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: true
+            referencedRelation: "sections_analysis"
+            referencedColumns: ["section_id"]
+          },
         ]
+      }
+      ingest_runs: {
+        Row: {
+          approved_on: string | null
+          counts_after: Json | null
+          counts_before: Json | null
+          file_count: number
+          id: string
+          mode: string
+          note: string | null
+          run_at: string
+          source_tool_versions: string[]
+          tool_name: string
+          tool_version: string
+        }
+        Insert: {
+          approved_on?: string | null
+          counts_after?: Json | null
+          counts_before?: Json | null
+          file_count: number
+          id?: string
+          mode: string
+          note?: string | null
+          run_at?: string
+          source_tool_versions?: string[]
+          tool_name: string
+          tool_version: string
+        }
+        Update: {
+          approved_on?: string | null
+          counts_after?: Json | null
+          counts_before?: Json | null
+          file_count?: number
+          id?: string
+          mode?: string
+          note?: string | null
+          run_at?: string
+          source_tool_versions?: string[]
+          tool_name?: string
+          tool_version?: string
+        }
+        Relationships: []
       }
       interview_configs: {
         Row: {
@@ -1597,48 +2115,267 @@ export type Database = {
           },
         ]
       }
-      meetings: {
+      meeting_attendance: {
         Row: {
-          committee_name: string | null
-          council_session_id: string | null
+          affiliation: string | null
           created_at: string
-          day_label: string | null
           id: string
-          kind: string
-          meeting_date: string
-          session_name: string | null
-          source_file: string
-          source_type: string
-          source_url: string | null
+          match_status: string
+          meeting_id: string
+          member_id: string | null
+          name_key_loose: string | null
+          name_raw: string | null
+          note: string | null
+          official_id: string | null
+          para: number | null
+          raw_line: string | null
+          role_raw: string | null
+          roster_order: number
+          roster_section: string
+          seat_number: number | null
+        }
+        Insert: {
+          affiliation?: string | null
+          created_at?: string
+          id?: string
+          match_status?: string
+          meeting_id: string
+          member_id?: string | null
+          name_key_loose?: string | null
+          name_raw?: string | null
+          note?: string | null
+          official_id?: string | null
+          para?: number | null
+          raw_line?: string | null
+          role_raw?: string | null
+          roster_order: number
+          roster_section: string
+          seat_number?: number | null
+        }
+        Update: {
+          affiliation?: string | null
+          created_at?: string
+          id?: string
+          match_status?: string
+          meeting_id?: string
+          member_id?: string | null
+          name_key_loose?: string | null
+          name_raw?: string | null
+          note?: string | null
+          official_id?: string | null
+          para?: number | null
+          raw_line?: string | null
+          role_raw?: string | null
+          roster_order?: number
+          roster_section?: string
+          seat_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendance_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_attendance_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_attendance_official_id_fkey"
+            columns: ["official_id"]
+            isOneToOne: false
+            referencedRelation: "officials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_bodies: {
+        Row: {
+          active_from: string | null
+          active_to: string | null
+          body_type: string
+          committee_id: string | null
+          created_at: string
+          drive_folder_no: string | null
+          id: string
+          name: string
+          note: string | null
+          predecessor_id: string | null
           updated_at: string
         }
         Insert: {
-          committee_name?: string | null
-          council_session_id?: string | null
+          active_from?: string | null
+          active_to?: string | null
+          body_type: string
+          committee_id?: string | null
           created_at?: string
-          day_label?: string | null
+          drive_folder_no?: string | null
           id?: string
-          kind: string
-          meeting_date: string
-          session_name?: string | null
-          source_file: string
-          source_type: string
-          source_url?: string | null
+          name: string
+          note?: string | null
+          predecessor_id?: string | null
           updated_at?: string
         }
         Update: {
+          active_from?: string | null
+          active_to?: string | null
+          body_type?: string
+          committee_id?: string | null
+          created_at?: string
+          drive_folder_no?: string | null
+          id?: string
+          name?: string
+          note?: string | null
+          predecessor_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_bodies_committee_id_fkey"
+            columns: ["committee_id"]
+            isOneToOne: false
+            referencedRelation: "committees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_bodies_predecessor_id_fkey"
+            columns: ["predecessor_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_bodies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_times: {
+        Row: {
+          created_at: string
+          event: string | null
+          hh: number | null
+          hhmm: string | null
+          id: string
+          meeting_id: string
+          mm: number | null
+          para: number
+          possible_typo: string | null
+          text_raw: string
+        }
+        Insert: {
+          created_at?: string
+          event?: string | null
+          hh?: number | null
+          hhmm?: string | null
+          id?: string
+          meeting_id: string
+          mm?: number | null
+          para: number
+          possible_typo?: string | null
+          text_raw: string
+        }
+        Update: {
+          created_at?: string
+          event?: string | null
+          hh?: number | null
+          hhmm?: string | null
+          id?: string
+          meeting_id?: string
+          mm?: number | null
+          para?: number
+          possible_typo?: string | null
+          text_raw?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_times_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          committee_name: string | null
+          content_scope: string
+          council_session_id: string | null
+          created_at: string
+          current_source_file_id: string | null
+          date_text: string | null
+          day_label: string | null
+          day_number: number | null
+          id: string
+          kind: string
+          meeting_body_id: string | null
+          meeting_date: string
+          meeting_key: string | null
+          place: string | null
+          publish_status: string
+          session_kind: string | null
+          session_name: string | null
+          session_number: number | null
+          source_file: string
+          source_type: string
+          source_url: string | null
+          title_raw: string | null
+          updated_at: string
+          volume: string | null
+        }
+        Insert: {
           committee_name?: string | null
+          content_scope?: string
           council_session_id?: string | null
           created_at?: string
+          current_source_file_id?: string | null
+          date_text?: string | null
           day_label?: string | null
+          day_number?: number | null
+          id?: string
+          kind: string
+          meeting_body_id?: string | null
+          meeting_date: string
+          meeting_key?: string | null
+          place?: string | null
+          publish_status?: string
+          session_kind?: string | null
+          session_name?: string | null
+          session_number?: number | null
+          source_file: string
+          source_type: string
+          source_url?: string | null
+          title_raw?: string | null
+          updated_at?: string
+          volume?: string | null
+        }
+        Update: {
+          committee_name?: string | null
+          content_scope?: string
+          council_session_id?: string | null
+          created_at?: string
+          current_source_file_id?: string | null
+          date_text?: string | null
+          day_label?: string | null
+          day_number?: number | null
           id?: string
           kind?: string
+          meeting_body_id?: string | null
           meeting_date?: string
+          meeting_key?: string | null
+          place?: string | null
+          publish_status?: string
+          session_kind?: string | null
           session_name?: string | null
+          session_number?: number | null
           source_file?: string
           source_type?: string
           source_url?: string | null
+          title_raw?: string | null
           updated_at?: string
+          volume?: string | null
         }
         Relationships: [
           {
@@ -1648,12 +2385,27 @@ export type Database = {
             referencedRelation: "council_sessions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "meetings_current_source_file_id_fkey"
+            columns: ["current_source_file_id"]
+            isOneToOne: false
+            referencedRelation: "source_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_meeting_body_id_fkey"
+            columns: ["meeting_body_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_bodies"
+            referencedColumns: ["id"]
+          },
         ]
       }
       member_aliases: {
         Row: {
           alias: string
           alias_key: string | null
+          alias_key_loose: string | null
           created_at: string
           id: string
           member_id: string
@@ -1661,6 +2413,7 @@ export type Database = {
         Insert: {
           alias: string
           alias_key?: string | null
+          alias_key_loose?: string | null
           created_at?: string
           id?: string
           member_id: string
@@ -1668,6 +2421,7 @@ export type Database = {
         Update: {
           alias?: string
           alias_key?: string | null
+          alias_key_loose?: string | null
           created_at?: string
           id?: string
           member_id?: string
@@ -1733,6 +2487,47 @@ export type Database = {
           },
         ]
       }
+      member_terms: {
+        Row: {
+          basis: string | null
+          created_at: string
+          end_date: string | null
+          id: string
+          member_id: string
+          seat_number: number | null
+          start_date: string | null
+          term_number: number | null
+        }
+        Insert: {
+          basis?: string | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          member_id: string
+          seat_number?: number | null
+          start_date?: string | null
+          term_number?: number | null
+        }
+        Update: {
+          basis?: string | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          member_id?: string
+          seat_number?: number | null
+          start_date?: string | null
+          term_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_terms_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           council_member_id: string | null
@@ -1770,6 +2565,332 @@ export type Database = {
             columns: ["council_member_id"]
             isOneToOne: true
             referencedRelation: "council_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      minutes_paragraphs: {
+        Row: {
+          also_contains: string | null
+          chars: number | null
+          created_at: string
+          id: string
+          masked_count: number | null
+          masked_orig_chars: number | null
+          masked_reason: string | null
+          meeting_id: string
+          notes: Json | null
+          para: number
+          part: string
+          pd_index: number | null
+          ptext_differs: boolean
+          ptext_missing_chars: number | null
+          source_file_id: string | null
+          speech_id: string | null
+          stage_after_speech_id: string | null
+          stage_inside_speech_id: string | null
+          table_cell: number[] | null
+          text: string
+          withheld_orig_chars: number | null
+          withheld_reason: string | null
+        }
+        Insert: {
+          also_contains?: string | null
+          chars?: number | null
+          created_at?: string
+          id?: string
+          masked_count?: number | null
+          masked_orig_chars?: number | null
+          masked_reason?: string | null
+          meeting_id: string
+          notes?: Json | null
+          para: number
+          part: string
+          pd_index?: number | null
+          ptext_differs?: boolean
+          ptext_missing_chars?: number | null
+          source_file_id?: string | null
+          speech_id?: string | null
+          stage_after_speech_id?: string | null
+          stage_inside_speech_id?: string | null
+          table_cell?: number[] | null
+          text?: string
+          withheld_orig_chars?: number | null
+          withheld_reason?: string | null
+        }
+        Update: {
+          also_contains?: string | null
+          chars?: number | null
+          created_at?: string
+          id?: string
+          masked_count?: number | null
+          masked_orig_chars?: number | null
+          masked_reason?: string | null
+          meeting_id?: string
+          notes?: Json | null
+          para?: number
+          part?: string
+          pd_index?: number | null
+          ptext_differs?: boolean
+          ptext_missing_chars?: number | null
+          source_file_id?: string | null
+          speech_id?: string | null
+          stage_after_speech_id?: string | null
+          stage_inside_speech_id?: string | null
+          table_cell?: number[] | null
+          text?: string
+          withheld_orig_chars?: number | null
+          withheld_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "minutes_paragraphs_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minutes_paragraphs_source_file_id_fkey"
+            columns: ["source_file_id"]
+            isOneToOne: false
+            referencedRelation: "source_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minutes_paragraphs_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "minutes_paragraphs_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minutes_paragraphs_stage_after_speech_id_fkey"
+            columns: ["stage_after_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "minutes_paragraphs_stage_after_speech_id_fkey"
+            columns: ["stage_after_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minutes_paragraphs_stage_inside_speech_id_fkey"
+            columns: ["stage_inside_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "minutes_paragraphs_stage_inside_speech_id_fkey"
+            columns: ["stage_inside_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      official_aliases: {
+        Row: {
+          alias: string
+          alias_key: string | null
+          alias_key_loose: string | null
+          created_at: string
+          id: string
+          official_id: string
+        }
+        Insert: {
+          alias: string
+          alias_key?: string | null
+          alias_key_loose?: string | null
+          created_at?: string
+          id?: string
+          official_id: string
+        }
+        Update: {
+          alias?: string
+          alias_key?: string | null
+          alias_key_loose?: string | null
+          created_at?: string
+          id?: string
+          official_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "official_aliases_official_id_fkey"
+            columns: ["official_id"]
+            isOneToOne: false
+            referencedRelation: "officials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      official_posts: {
+        Row: {
+          basis: string | null
+          created_at: string
+          department: string | null
+          end_date: string | null
+          first_meeting_id: string | null
+          id: string
+          last_meeting_id: string | null
+          official_id: string
+          post_title: string
+          start_date: string | null
+        }
+        Insert: {
+          basis?: string | null
+          created_at?: string
+          department?: string | null
+          end_date?: string | null
+          first_meeting_id?: string | null
+          id?: string
+          last_meeting_id?: string | null
+          official_id: string
+          post_title: string
+          start_date?: string | null
+        }
+        Update: {
+          basis?: string | null
+          created_at?: string
+          department?: string | null
+          end_date?: string | null
+          first_meeting_id?: string | null
+          id?: string
+          last_meeting_id?: string | null
+          official_id?: string
+          post_title?: string
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "official_posts_first_meeting_id_fkey"
+            columns: ["first_meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "official_posts_last_meeting_id_fkey"
+            columns: ["last_meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "official_posts_official_id_fkey"
+            columns: ["official_id"]
+            isOneToOne: false
+            referencedRelation: "officials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      officials: {
+        Row: {
+          created_at: string
+          id: string
+          is_provisional: boolean
+          name: string
+          name_key_loose: string | null
+          note: string | null
+          official_kind: string
+          updated_at: string
+          yomi: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_provisional?: boolean
+          name: string
+          name_key_loose?: string | null
+          note?: string | null
+          official_kind: string
+          updated_at?: string
+          yomi?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_provisional?: boolean
+          name?: string
+          name_key_loose?: string | null
+          note?: string | null
+          official_kind?: string
+          updated_at?: string
+          yomi?: string | null
+        }
+        Relationships: []
+      }
+      petition_documents: {
+        Row: {
+          created_at: string
+          doc_order: number
+          extra_fields: Json
+          id: string
+          introducing_members: string | null
+          kind: string
+          meeting_id: string
+          para_end: number | null
+          para_start: number | null
+          reason: string | null
+          received: string | null
+          referred_committee: string | null
+          requested_items: string | null
+          summary: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_order: number
+          extra_fields?: Json
+          id?: string
+          introducing_members?: string | null
+          kind: string
+          meeting_id: string
+          para_end?: number | null
+          para_start?: number | null
+          reason?: string | null
+          received?: string | null
+          referred_committee?: string | null
+          requested_items?: string | null
+          summary?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_order?: number
+          extra_fields?: Json
+          id?: string
+          introducing_members?: string | null
+          kind?: string
+          meeting_id?: string
+          para_end?: number | null
+          para_start?: number | null
+          reason?: string | null
+          received?: string | null
+          referred_committee?: string | null
+          requested_items?: string | null
+          summary?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petition_documents_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
             referencedColumns: ["id"]
           },
         ]
@@ -1921,6 +3042,94 @@ export type Database = {
           },
         ]
       }
+      procedural_markers: {
+        Row: {
+          agenda_item_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          marker_order: number
+          meeting_id: string
+          opens: boolean | null
+          refs: string[] | null
+          section_id: string | null
+          sentence_index: number | null
+          speech_id: string | null
+          wording: string
+        }
+        Insert: {
+          agenda_item_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          marker_order: number
+          meeting_id: string
+          opens?: boolean | null
+          refs?: string[] | null
+          section_id?: string | null
+          sentence_index?: number | null
+          speech_id?: string | null
+          wording: string
+        }
+        Update: {
+          agenda_item_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          marker_order?: number
+          meeting_id?: string
+          opens?: boolean | null
+          refs?: string[] | null
+          section_id?: string | null
+          sentence_index?: number | null
+          speech_id?: string | null
+          wording?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedural_markers_agenda_item_id_fkey"
+            columns: ["agenda_item_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedural_markers_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedural_markers_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procedural_markers_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections_analysis"
+            referencedColumns: ["section_id"]
+          },
+          {
+            foreignKeyName: "procedural_markers_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "procedural_markers_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_reactions: {
         Row: {
           created_at: string
@@ -1953,38 +3162,196 @@ export type Database = {
           },
         ]
       }
+      section_agenda_items: {
+        Row: {
+          agenda_item_id: string
+          created_at: string
+          section_id: string
+        }
+        Insert: {
+          agenda_item_id: string
+          created_at?: string
+          section_id: string
+        }
+        Update: {
+          agenda_item_id?: string
+          created_at?: string
+          section_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "section_agenda_items_agenda_item_id_fkey"
+            columns: ["agenda_item_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_agenda_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_agenda_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections_analysis"
+            referencedColumns: ["section_id"]
+          },
+        ]
+      }
+      section_budget_scopes: {
+        Row: {
+          accounts: string[] | null
+          created_at: string
+          id: string
+          inherited_from_same_speech: boolean
+          is_range: boolean
+          kan: Json | null
+          kou: Json | null
+          scope_order: number
+          section_id: string
+          sides: string[] | null
+          wording: string
+        }
+        Insert: {
+          accounts?: string[] | null
+          created_at?: string
+          id?: string
+          inherited_from_same_speech?: boolean
+          is_range?: boolean
+          kan?: Json | null
+          kou?: Json | null
+          scope_order?: number
+          section_id: string
+          sides?: string[] | null
+          wording: string
+        }
+        Update: {
+          accounts?: string[] | null
+          created_at?: string
+          id?: string
+          inherited_from_same_speech?: boolean
+          is_range?: boolean
+          kan?: Json | null
+          kou?: Json | null
+          scope_order?: number
+          section_id?: string
+          sides?: string[] | null
+          wording?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "section_budget_scopes_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_budget_scopes_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections_analysis"
+            referencedColumns: ["section_id"]
+          },
+        ]
+      }
+      section_kinds: {
+        Row: {
+          base_kind: string
+          excluded_from_analysis: boolean
+          kind: string
+          note: string | null
+          sort_order: number
+        }
+        Insert: {
+          base_kind: string
+          excluded_from_analysis: boolean
+          kind: string
+          note?: string | null
+          sort_order: number
+        }
+        Update: {
+          base_kind?: string
+          excluded_from_analysis?: boolean
+          kind?: string
+          note?: string | null
+          sort_order?: number
+        }
+        Relationships: []
+      }
       sections: {
         Row: {
           created_at: string
+          end_seq: number | null
           excluded_from_analysis: boolean | null
           id: string
           kind: string
+          kind_detail: string | null
           meeting_id: string
+          range_id: string | null
+          range_role: string | null
           section_order: number
+          source_section_no: number | null
+          start_char: number | null
+          start_para: number | null
+          start_sentence: number | null
+          start_sentence_head: string | null
+          start_seq: number | null
           title: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          end_seq?: number | null
           excluded_from_analysis?: boolean | null
           id?: string
           kind: string
+          kind_detail?: string | null
           meeting_id: string
+          range_id?: string | null
+          range_role?: string | null
           section_order: number
+          source_section_no?: number | null
+          start_char?: number | null
+          start_para?: number | null
+          start_sentence?: number | null
+          start_sentence_head?: string | null
+          start_seq?: number | null
           title?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          end_seq?: number | null
           excluded_from_analysis?: boolean | null
           id?: string
           kind?: string
+          kind_detail?: string | null
           meeting_id?: string
+          range_id?: string | null
+          range_role?: string | null
           section_order?: number
+          source_section_no?: number | null
+          start_char?: number | null
+          start_para?: number | null
+          start_sentence?: number | null
+          start_sentence_head?: string | null
+          start_seq?: number | null
           title?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sections_kind_detail_fkey"
+            columns: ["kind_detail", "kind"]
+            isOneToOne: false
+            referencedRelation: "section_kinds"
+            referencedColumns: ["kind", "base_kind"]
+          },
           {
             foreignKeyName: "sections_meeting_id_fkey"
             columns: ["meeting_id"]
@@ -1992,55 +3359,362 @@ export type Database = {
             referencedRelation: "meetings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sections_range_id_fkey"
+            columns: ["range_id"]
+            isOneToOne: false
+            referencedRelation: "general_question_ranges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      source_files: {
+        Row: {
+          conversion: string | null
+          converted: boolean
+          created_at: string
+          date_check: string | null
+          date_from_name: string | null
+          date_source: string | null
+          dedupe_rule: string | null
+          drive_path: string | null
+          duplicate_of: string | null
+          file_name: string
+          format: string
+          format_issues: Json
+          id: string
+          ingest_run_id: string | null
+          intermediate_sha256: string | null
+          is_representative: boolean
+          meeting_key: string
+          parsed_file: string | null
+          same_text_as_representative: boolean | null
+          selected_because: string | null
+          sha256_parsed: string | null
+          sha256_source: string
+          size_source: number | null
+          source_type: string
+          tool_name: string | null
+          tool_version: string | null
+          volume: string | null
+        }
+        Insert: {
+          conversion?: string | null
+          converted?: boolean
+          created_at?: string
+          date_check?: string | null
+          date_from_name?: string | null
+          date_source?: string | null
+          dedupe_rule?: string | null
+          drive_path?: string | null
+          duplicate_of?: string | null
+          file_name: string
+          format: string
+          format_issues?: Json
+          id?: string
+          ingest_run_id?: string | null
+          intermediate_sha256?: string | null
+          is_representative: boolean
+          meeting_key: string
+          parsed_file?: string | null
+          same_text_as_representative?: boolean | null
+          selected_because?: string | null
+          sha256_parsed?: string | null
+          sha256_source: string
+          size_source?: number | null
+          source_type: string
+          tool_name?: string | null
+          tool_version?: string | null
+          volume?: string | null
+        }
+        Update: {
+          conversion?: string | null
+          converted?: boolean
+          created_at?: string
+          date_check?: string | null
+          date_from_name?: string | null
+          date_source?: string | null
+          dedupe_rule?: string | null
+          drive_path?: string | null
+          duplicate_of?: string | null
+          file_name?: string
+          format?: string
+          format_issues?: Json
+          id?: string
+          ingest_run_id?: string | null
+          intermediate_sha256?: string | null
+          is_representative?: boolean
+          meeting_key?: string
+          parsed_file?: string | null
+          same_text_as_representative?: boolean | null
+          selected_because?: string | null
+          sha256_parsed?: string | null
+          sha256_source?: string
+          size_source?: number | null
+          source_type?: string
+          tool_name?: string | null
+          tool_version?: string | null
+          volume?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_files_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "source_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "source_files_ingest_run_id_fkey"
+            columns: ["ingest_run_id"]
+            isOneToOne: false
+            referencedRelation: "ingest_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      speech_key_map: {
+        Row: {
+          checked_by: string | null
+          checked_on: string | null
+          created_at: string
+          id: string
+          match_how: string
+          new_speech_id: string | null
+          old_speech_key: string
+          result: string
+        }
+        Insert: {
+          checked_by?: string | null
+          checked_on?: string | null
+          created_at?: string
+          id?: string
+          match_how: string
+          new_speech_id?: string | null
+          old_speech_key: string
+          result: string
+        }
+        Update: {
+          checked_by?: string | null
+          checked_on?: string | null
+          created_at?: string
+          id?: string
+          match_how?: string
+          new_speech_id?: string | null
+          old_speech_key?: string
+          result?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "speech_key_map_new_speech_id_fkey"
+            columns: ["new_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "speech_key_map_new_speech_id_fkey"
+            columns: ["new_speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      speech_references: {
+        Row: {
+          by_presider: boolean | null
+          created_at: string
+          form: string | null
+          id: string
+          ref_order: number
+          section_id: string | null
+          section_kind: string | null
+          speech_id: string
+          wording: string
+        }
+        Insert: {
+          by_presider?: boolean | null
+          created_at?: string
+          form?: string | null
+          id?: string
+          ref_order: number
+          section_id?: string | null
+          section_kind?: string | null
+          speech_id: string
+          wording: string
+        }
+        Update: {
+          by_presider?: boolean | null
+          created_at?: string
+          form?: string | null
+          id?: string
+          ref_order?: number
+          section_id?: string | null
+          section_kind?: string | null
+          speech_id?: string
+          wording?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "speech_references_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "speech_references_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections_analysis"
+            referencedColumns: ["section_id"]
+          },
+          {
+            foreignKeyName: "speech_references_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "speech_references_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
         ]
       }
       speeches: {
         Row: {
+          attendance_id: string | null
           body: string
+          chars: number | null
+          chars_nospace: number | null
           created_at: string
+          flags: string[] | null
+          has_masked: boolean | null
           id: string
+          identify_how: string | null
+          identify_note: string | null
+          in_general_question: boolean
+          is_presiding: boolean | null
+          is_related_question: boolean
+          key_dup_no: number | null
+          key_head20_sha1: string | null
+          line_end: number | null
+          line_start: number | null
           meeting_id: string
           member_id: string | null
           member_unconfirmed: boolean | null
+          official_id: string | null
+          para_end: number | null
+          para_start: number | null
+          presiding_class: string | null
           section_id: string | null
+          sections_spanned: number[] | null
+          source_file_id: string | null
+          speaker_detail: string | null
           speaker_kind: string
+          speaker_label_raw: string | null
           speaker_name_raw: string
           speaker_role_raw: string | null
+          speech_key: string | null
           speech_order: number
+          starts_mid_section: boolean
           stated_faction: string | null
+          status: string
           updated_at: string
         }
         Insert: {
+          attendance_id?: string | null
           body: string
+          chars?: number | null
+          chars_nospace?: number | null
           created_at?: string
+          flags?: string[] | null
+          has_masked?: boolean | null
           id?: string
+          identify_how?: string | null
+          identify_note?: string | null
+          in_general_question?: boolean
+          is_presiding?: boolean | null
+          is_related_question?: boolean
+          key_dup_no?: number | null
+          key_head20_sha1?: string | null
+          line_end?: number | null
+          line_start?: number | null
           meeting_id: string
           member_id?: string | null
           member_unconfirmed?: boolean | null
+          official_id?: string | null
+          para_end?: number | null
+          para_start?: number | null
+          presiding_class?: string | null
           section_id?: string | null
+          sections_spanned?: number[] | null
+          source_file_id?: string | null
+          speaker_detail?: string | null
           speaker_kind: string
+          speaker_label_raw?: string | null
           speaker_name_raw: string
           speaker_role_raw?: string | null
+          speech_key?: string | null
           speech_order: number
+          starts_mid_section?: boolean
           stated_faction?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
+          attendance_id?: string | null
           body?: string
+          chars?: number | null
+          chars_nospace?: number | null
           created_at?: string
+          flags?: string[] | null
+          has_masked?: boolean | null
           id?: string
+          identify_how?: string | null
+          identify_note?: string | null
+          in_general_question?: boolean
+          is_presiding?: boolean | null
+          is_related_question?: boolean
+          key_dup_no?: number | null
+          key_head20_sha1?: string | null
+          line_end?: number | null
+          line_start?: number | null
           meeting_id?: string
           member_id?: string | null
           member_unconfirmed?: boolean | null
+          official_id?: string | null
+          para_end?: number | null
+          para_start?: number | null
+          presiding_class?: string | null
           section_id?: string | null
+          sections_spanned?: number[] | null
+          source_file_id?: string | null
+          speaker_detail?: string | null
           speaker_kind?: string
+          speaker_label_raw?: string | null
           speaker_name_raw?: string
           speaker_role_raw?: string | null
+          speech_key?: string | null
           speech_order?: number
+          starts_mid_section?: boolean
           stated_faction?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "speeches_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_attendance"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "speeches_meeting_id_fkey"
             columns: ["meeting_id"]
@@ -2056,11 +3730,104 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "speeches_official_id_fkey"
+            columns: ["official_id"]
+            isOneToOne: false
+            referencedRelation: "officials"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "speeches_section_fkey"
             columns: ["section_id", "meeting_id"]
             isOneToOne: false
             referencedRelation: "sections"
             referencedColumns: ["id", "meeting_id"]
+          },
+          {
+            foreignKeyName: "speeches_section_fkey"
+            columns: ["section_id", "meeting_id"]
+            isOneToOne: false
+            referencedRelation: "sections_analysis"
+            referencedColumns: ["section_id", "meeting_id"]
+          },
+          {
+            foreignKeyName: "speeches_source_file_id_fkey"
+            columns: ["source_file_id"]
+            isOneToOne: false
+            referencedRelation: "source_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stated_stances: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          label_raw: string | null
+          member_id: string | null
+          section_id: string
+          speech_id: string | null
+          stance_order: number
+          wording: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          label_raw?: string | null
+          member_id?: string | null
+          section_id: string
+          speech_id?: string | null
+          stance_order: number
+          wording: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          label_raw?: string | null
+          member_id?: string | null
+          section_id?: string
+          speech_id?: string | null
+          stance_order?: number
+          wording?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stated_stances_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stated_stances_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stated_stances_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections_analysis"
+            referencedColumns: ["section_id"]
+          },
+          {
+            foreignKeyName: "stated_stances_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "stated_stances_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2277,6 +4044,13 @@ export type Database = {
             referencedRelation: "sections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "topic_nodes_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections_analysis"
+            referencedColumns: ["section_id"]
+          },
         ]
       }
       topic_speeches: {
@@ -2328,6 +4102,114 @@ export type Database = {
           },
         ]
       }
+      vote_agenda_items: {
+        Row: {
+          agenda_item_id: string
+          created_at: string
+          vote_id: string
+        }
+        Insert: {
+          agenda_item_id: string
+          created_at?: string
+          vote_id: string
+        }
+        Update: {
+          agenda_item_id?: string
+          created_at?: string
+          vote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vote_agenda_items_agenda_item_id_fkey"
+            columns: ["agenda_item_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_agenda_items_vote_id_fkey"
+            columns: ["vote_id"]
+            isOneToOne: false
+            referencedRelation: "votes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      votes: {
+        Row: {
+          created_at: string
+          id: string
+          meeting_id: string
+          method_wording: string | null
+          result_machine: string | null
+          result_machine_by: string | null
+          result_wording: string
+          section_id: string | null
+          speech_id: string | null
+          vote_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meeting_id: string
+          method_wording?: string | null
+          result_machine?: string | null
+          result_machine_by?: string | null
+          result_wording: string
+          section_id?: string | null
+          speech_id?: string | null
+          vote_order: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          method_wording?: string | null
+          result_machine?: string | null
+          result_machine_by?: string | null
+          result_wording?: string
+          section_id?: string | null
+          speech_id?: string | null
+          vote_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections_analysis"
+            referencedColumns: ["section_id"]
+          },
+          {
+            foreignKeyName: "votes_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speech_factions"
+            referencedColumns: ["speech_id"]
+          },
+          {
+            foreignKeyName: "votes_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       jimu_jigyo_budget_timeline: {
@@ -2365,6 +4247,32 @@ export type Database = {
           },
         ]
       }
+      sections_analysis: {
+        Row: {
+          excluded_basis: string | null
+          excluded_from_analysis: boolean | null
+          kind: string | null
+          kind_detail: string | null
+          meeting_id: string | null
+          section_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sections_kind_detail_fkey"
+            columns: ["kind_detail", "kind"]
+            isOneToOne: false
+            referencedRelation: "section_kinds"
+            referencedColumns: ["kind", "base_kind"]
+          },
+          {
+            foreignKeyName: "sections_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       speech_factions: {
         Row: {
           faction_name: string | null
@@ -2394,6 +4302,7 @@ export type Database = {
       }
     }
     Functions: {
+      alias_key_loose: { Args: { p_text: string }; Returns: string }
       count_reactions_by_report_ids: {
         Args: { report_ids: string[] }
         Returns: {
