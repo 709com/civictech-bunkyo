@@ -26,7 +26,7 @@ export function pickOperatorContacts(contact: OperatorContact) {
 
 /**
  * 運営者情報ページの「会派の連絡先」。
- * 2026-10-22 先生の決定で、会派の連絡先は事務所（文京区議会議員 たかはまなおき 事務所）と共通。
+ * 2026-10-28 先生の指示で、会派の連絡先は文京区役所21階の住所とメールにした（事務所と共通の表記はやめた）。
  * 値が1つも入っていないときは、見出しごと表示しない。
  */
 export function OperatorContactSection({
@@ -38,10 +38,9 @@ export function OperatorContactSection({
 
   return (
     <section className="space-y-3">
-      <LegalSectionTitle>会派の連絡先（事務所と共通）</LegalSectionTitle>
+      <LegalSectionTitle>会派の連絡先</LegalSectionTitle>
       <LegalParagraph>
-        {operatorName}
-        の連絡先は、文京区議会議員 たかはまなおき 事務所と共通です。
+        {operatorName}の連絡先は、次のとおりです。
       </LegalParagraph>
       <dl className="space-y-2 text-base leading-relaxed">
         {items.map((item) => (

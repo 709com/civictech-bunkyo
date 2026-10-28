@@ -38,10 +38,10 @@ describe("OperatorContactSection", () => {
       />
     );
     expect(
-      screen.getByRole("heading", { name: "会派の連絡先（事務所と共通）" })
+      screen.getByRole("heading", { name: "会派の連絡先" })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/事務所と共通です。/, { exact: false })
+      screen.getByText(/の連絡先は、次のとおりです。/, { exact: false })
     ).toBeInTheDocument();
     expect(screen.getByText("所在地")).toBeInTheDocument();
     expect(screen.getByText("テスト住所")).toBeInTheDocument();
@@ -50,12 +50,12 @@ describe("OperatorContactSection", () => {
     expect(screen.queryByText("メール")).not.toBeInTheDocument();
   });
 
-  it("サイトの設定の住所・電話（公式サイトの記載どおり）が表示される", () => {
+  it("サイトの設定の住所・メール（2026-10-28 先生の指示どおり）が表示され、電話は出ない", () => {
     expect(siteConfig.operator.contact.address).toBe(
-      "〒112-0011  東京都文京区千石1-27-12"
+      "東京都文京区春日1-16-21 文京区役所21階"
     );
-    expect(siteConfig.operator.contact.phone).toBe("070-6467-1223");
-    expect(siteConfig.operator.contact.email).toBe("");
+    expect(siteConfig.operator.contact.phone).toBe("");
+    expect(siteConfig.operator.contact.email).toBe("info@takahamanaoki.com");
 
     const { container } = render(
       <OperatorContactSection
@@ -67,8 +67,8 @@ describe("OperatorContactSection", () => {
       (dd) => dd.textContent
     );
     expect(values).toEqual([
-      "〒112-0011  東京都文京区千石1-27-12",
-      "070-6467-1223",
+      "東京都文京区春日1-16-21 文京区役所21階",
+      "info@takahamanaoki.com",
     ]);
   });
 });

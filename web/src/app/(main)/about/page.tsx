@@ -51,7 +51,9 @@ export default function AboutPage() {
         の議会報告サイトです。{siteConfig.cityName}・{siteConfig.councilName}
         の公式サービスではなく、政党チームみらいとも関係ありません。掲載内容の責任は、
         {siteConfig.operator.name}（代表 {siteConfig.operator.representative}
-        ）にあります。掲載内容について区や区議会事務局へお問い合わせいただいてもお答えできません。お問い合わせは本サイトの
+        ）にあります。本サイトの作成・運営に、{siteConfig.cityName}および
+        {siteConfig.councilName}
+        事務局は関与していません。掲載内容について区や区議会事務局へお問い合わせいただいてもお答えできません。お問い合わせは本サイトの
         <ContactFormLink>窓口</ContactFormLink>
         までお願いします。
       </LegalParagraph>

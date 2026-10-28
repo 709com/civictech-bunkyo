@@ -89,14 +89,15 @@ export const siteConfig = {
     funding: "政務活動費（広報費）" as string,
     /**
      * 会派の連絡先。空の欄は画面に表示しない（推測で埋めない）。
-     * 2026-10-22 先生の決定で、事務所（文京区議会議員 たかはまなおき 事務所）と共通。
-     * 住所・電話は先生の公式サイト https://takahamanaoki.com/contact の記載どおり（1字も変えない）。
-     * メールは公式サイトに載っていないので空のまま。問い合わせの窓口は externalLinks.contactForm（Googleフォーム）。
+     * 2026-10-28 先生の指示で、文京区役所21階の住所とメールにした（事務所と共通の表記はやめた）。
+     * 住所は先生の言葉「東京都文京区春日1丁目16−21－21階、文京区役所」による。郵便番号・ビル名は推測で足さない。
+     * 電話は指示がないので空のまま（以前の事務所の電話は載せない）。
+     * 問い合わせの窓口は、引き続き externalLinks.contactForm（Googleフォーム）。
      */
     contact: {
-      address: "〒112-0011  東京都文京区千石1-27-12" as string,
-      phone: "070-6467-1223" as string,
-      email: "" as string,
+      address: "東京都文京区春日1-16-21 文京区役所21階" as string,
+      phone: "" as string,
+      email: "info@takahamanaoki.com" as string,
     },
     /** 利用規約の準拠法・管轄裁判所（第一審の専属的合意管轄） */
     jurisdiction: "東京地方裁判所" as string,
