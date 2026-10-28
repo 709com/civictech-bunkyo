@@ -2,6 +2,7 @@
 
 使い方: py -3 tools/committee_regression_check.py
 結果は画面に出し、data/今期分/確認表の結果.csv にも書く（人名は書かない）。
+環境変数 TERM_OUT を付けると、今期分の組をそのフォルダで確かめ、結果もそこに書く（試しの出し直し用）。
 """
 import csv
 import glob
@@ -12,7 +13,7 @@ from collections import Counter
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DIRS = {"trial": [os.path.join(ROOT, "data", "委員会試し"), os.path.join(ROOT, "data", "委員会試し", "追加")],
-        "term": [os.path.join(ROOT, "data", "今期分")]}
+        "term": [os.environ.get("TERM_OUT") or os.path.join(ROOT, "data", "今期分")]}
 REP_LEFT = re.compile(r"(代表取締役|取締役|執行役員|支店長|本店長|支社長|代表社員|代表理事|理事長|本社代表)、?(?!［)([一-龥]{2,5})(?=でございます|です|で、|。)")
 
 
@@ -185,6 +186,10 @@ def check_case(c, cache):
             ok = ok and (it["title"] == "") == c["blank"]
         if "rule_contains" in c:
             ok = ok and c["rule_contains"] in ((it.get("title_evidence") or {}).get("rule") or "")
+        if "hit_words" in c:
+            # 推定の根拠に、その分野の言葉として数えられているか（v0.3.9）
+            hits = ((it.get("title_evidence") or {}).get("hits") or {}).get(c.get("field"), {})
+            ok = ok and all(w in hits for w in c["hit_words"])
         return ok, f"項目{c['item']} 出どころ「{it.get('title_source')}」・分野「{it.get('title_field')}」・空欄={it['title'] == ''}"
     if k == "answer_title_from_file":
         # 中間ファイルの最初の答弁の本文に、今の道具の「答弁の前置き」の読み取りをかける（作り直していない試しの組でも確かめられる）
@@ -252,7 +257,7 @@ def main():
         ok, why = check_all_files(c) if c["set"] == "all" else check_case(c, cache)
         rows.append([c["id"], c["set"], c.get("file", "（全件）"), c["check"], "合格" if ok else "不合格", why, c.get("why", "")])
         print(("OK " if ok else "NG ") + c["id"], c.get("file", ""), why)
-    out = os.path.join(ROOT, "data", "今期分", "確認表の結果.csv")
+    out = os.path.join(DIRS["term"][0], "確認表の結果.csv")  # TERM_OUT で別のフォルダに出したときは、そのフォルダに書く
     with open(out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
         w.writerow(["番号", "組", "会議（ファイル名の頭）", "確かめ方", "結果", "中身", "なぜ"])
