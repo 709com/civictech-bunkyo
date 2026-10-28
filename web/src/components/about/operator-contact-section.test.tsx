@@ -50,7 +50,7 @@ describe("OperatorContactSection", () => {
     expect(screen.queryByText("メール")).not.toBeInTheDocument();
   });
 
-  it("サイトの設定の住所・メール（2026-10-28 先生の指示どおり）が表示され、電話は出ない", () => {
+  it("サイトの設定の住所・メール（2026-10-28 運営者の指示どおり）が表示され、電話は出ない", () => {
     expect(siteConfig.operator.contact.address).toBe(
       "東京都文京区春日1-16-21 文京区役所21階"
     );
