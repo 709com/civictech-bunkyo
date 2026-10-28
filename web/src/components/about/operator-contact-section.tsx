@@ -26,7 +26,7 @@ export function pickOperatorContacts(contact: OperatorContact) {
 
 /**
  * 運営者情報ページの「会派の連絡先」。
- * 2026-10-28 運営者の指示で、会派の連絡先は文京区役所21階の住所とメールにした（事務所と共通の表記はやめた）。
+ * 2026-10-28 運営者の判断で、会派の連絡先は住所だけにした（電話・メールは載せない。事務所と共通の表記はやめた）。
  * 値が1つも入っていないときは、見出しごと表示しない。
  */
 export function OperatorContactSection({

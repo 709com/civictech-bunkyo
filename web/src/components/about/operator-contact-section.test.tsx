@@ -50,12 +50,12 @@ describe("OperatorContactSection", () => {
     expect(screen.queryByText("メール")).not.toBeInTheDocument();
   });
 
-  it("サイトの設定の住所・メール（2026-10-28 運営者の指示どおり）が表示され、電話は出ない", () => {
+  it("サイトの設定の住所（2026-10-28 運営者の判断どおり）だけが表示され、電話・メールは出ない", () => {
     expect(siteConfig.operator.contact.address).toBe(
-      "東京都文京区春日1-16-21 文京区役所21階"
+      "東京都文京区春日1-16-21 21階"
     );
     expect(siteConfig.operator.contact.phone).toBe("");
-    expect(siteConfig.operator.contact.email).toBe("info@takahamanaoki.com");
+    expect(siteConfig.operator.contact.email).toBe("");
 
     const { container } = render(
       <OperatorContactSection
@@ -66,9 +66,6 @@ describe("OperatorContactSection", () => {
     const values = Array.from(container.querySelectorAll("dd")).map(
       (dd) => dd.textContent
     );
-    expect(values).toEqual([
-      "東京都文京区春日1-16-21 文京区役所21階",
-      "info@takahamanaoki.com",
-    ]);
+    expect(values).toEqual(["東京都文京区春日1-16-21 21階"]);
   });
 });

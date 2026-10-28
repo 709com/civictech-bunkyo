@@ -85,19 +85,20 @@ export const siteConfig = {
     name: "会派「ぶんきょう子育て.ネット」" as string,
     /** 会派の代表者 */
     representative: "文京区議会議員 高浜直樹" as string,
+    /** 代表者の公式サイト（運営者情報に1行だけ表示。2026-10-28 運営者の判断） */
+    representativeSiteUrl: "https://takahamanaoki.com" as string,
     /** 運営の費用（運営者情報に表示） */
     funding: "政務活動費（広報費）" as string,
     /**
      * 会派の連絡先。空の欄は画面に表示しない（推測で埋めない）。
-     * 2026-10-28 運営者の指示で、文京区役所21階の住所とメールにした（事務所と共通の表記はやめた）。
-     * 郵便番号・ビル名は推測で足さない。
-     * 電話は指示がないので空のまま（以前の事務所の電話は載せない）。
-     * 問い合わせの窓口は、引き続き externalLinks.contactForm（Googleフォーム）。
+     * 2026-10-28 運営者の判断で、住所は「東京都文京区春日1-16-21 21階」にした（事務所と共通の表記はやめた）。
+     * 郵便番号は推測で足さない。電話とメールは載せない。
+     * 問い合わせの窓口は、引き続き externalLinks.contactForm（Googleフォーム）だけ。
      */
     contact: {
-      address: "東京都文京区春日1-16-21 文京区役所21階" as string,
+      address: "東京都文京区春日1-16-21 21階" as string,
       phone: "" as string,
-      email: "info@takahamanaoki.com" as string,
+      email: "" as string,
     },
     /** 利用規約の準拠法・管轄裁判所（第一審の専属的合意管轄） */
     jurisdiction: "東京地方裁判所" as string,

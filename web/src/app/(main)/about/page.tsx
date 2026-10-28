@@ -39,6 +39,24 @@ export default function AboutPage() {
             で運営しています。政務活動費は、選挙に係る費用には使用しません。
           </dd>
         </div>
+        <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+          <dt className="shrink-0 font-bold text-slate-900">
+            代表者の公式サイト
+          </dt>
+          <dd>
+            <Link
+              href={siteConfig.operator.representativeSiteUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2 break-all"
+            >
+              {siteConfig.operator.representativeSiteUrl.replace(
+                /^https?:\/\//,
+                ""
+              )}
+            </Link>
+          </dd>
+        </div>
       </dl>
 
       <OperatorContactSection
